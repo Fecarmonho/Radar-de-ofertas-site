@@ -53,26 +53,6 @@ function FloatBadge({
   );
 }
 
-function BagIllustration() {
-  return (
-    <svg viewBox="0 0 320 320" className="h-full w-full" aria-hidden="true">
-      <GlossyDefs />
-      <radialGradient id="bg1" cx="50%" cy="45%" r="55%">
-        <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
-      </radialGradient>
-      <circle cx="160" cy="160" r="150" fill="url(#bg1)" />
-      <g filter="url(#softGlow)">
-        <rect x="95" y="130" width="130" height="120" rx="16" fill="#FF6B00" />
-        <rect x="95" y="130" width="130" height="120" rx="16" fill="url(#sheen)" />
-      </g>
-      <path d="M120 130v-20a40 40 0 0 1 80 0v20" fill="none" stroke="#FFE9D6" strokeWidth="10" strokeLinecap="round" />
-      <circle cx="160" cy="185" r="27" fill="#FFF5EB" />
-      <text x="160" y="195" textAnchor="middle" fontSize="27" fontWeight="800" fill="#E8500F">%</text>
-    </svg>
-  );
-}
-
 function BoxIllustration() {
   return (
     <svg viewBox="0 0 320 320" className="h-full w-full" aria-hidden="true">
@@ -90,28 +70,6 @@ function BoxIllustration() {
       <line x1="160" y1="170" x2="160" y2="260" stroke="#7A2205" strokeWidth="3" />
       <path d="M130 105 165 88 200 105" fill="none" stroke="#FFE9D6" strokeWidth="6" strokeLinecap="round" />
       <polygon points="160,90 200,110 160,130 120,110" fill="url(#sheen)" opacity="0.7" />
-    </svg>
-  );
-}
-
-function CartIllustration() {
-  return (
-    <svg viewBox="0 0 320 320" className="h-full w-full" aria-hidden="true">
-      <GlossyDefs />
-      <radialGradient id="bg3" cx="50%" cy="45%" r="55%">
-        <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
-      </radialGradient>
-      <circle cx="160" cy="160" r="150" fill="url(#bg3)" />
-      <g filter="url(#softGlow)" fill="none" stroke="#FF6B00" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M75 90h24l14 118a18 18 0 0 0 18 16h96a18 18 0 0 0 17-13l20-70H115" />
-      </g>
-      <circle cx="140" cy="248" r="14" fill="#FFB347" />
-      <circle cx="222" cy="248" r="14" fill="#FFB347" />
-      <circle cx="222" cy="140" r="30" fill="#FFF5EB" />
-      <text x="222" y="150" textAnchor="middle" fontSize="28" fontWeight="800" fill="#E8500F">
-        R$
-      </text>
     </svg>
   );
 }
@@ -153,37 +111,56 @@ const ICON_STAR = (
 
 const SLIDES = [
   {
-    badge: "Toda a Shopee, num só radar",
-    title: "Suas compras\ncom preço de verdade",
+    variant: "hero" as const,
+    badge: "Radar ligado · ofertas ao vivo",
+    title: "As melhores ofertas,\ndetectadas antes de todo mundo",
+    highlight: "detectadas",
     description:
-      "Sem promoção maquiada: só entram no radar produtos que valem cada centavo.",
-    cta: { label: "Ver ofertas do radar", href: "#ofertas" },
-    Illustration: BagIllustration,
+      "Varremos a Shopee para encontrar produtos que valem cada centavo. Você só vê o que passou no nosso radar.",
+    ctas: [
+      { label: "Ver ofertas no radar", href: "#ofertas", style: "fire" as const },
+      { label: "Como funciona", href: "#como-funciona", style: "outline" as const },
+    ],
   },
   {
+    variant: "icon" as const,
     badge: "Do clique à sua porta",
     title: "Compre com\nsegurança total",
     description:
       "Todo link leva direto pra loja oficial da Shopee — você compra, garante e recebe.",
-    cta: { label: "Como funciona", href: "#como-funciona" },
+    ctas: [{ label: "Como funciona", href: "#como-funciona", style: "fire" as const }],
     Illustration: BoxIllustration,
   },
   {
+    variant: "hero" as const,
     badge: "Comparação de verdade",
-    title: "Preço, nota e\ncusto-benefício",
+    title: "Preço, nota e\ncusto-benefício, sempre",
+    highlight: "custo-benefício",
     description:
-      "Cada produto é comparado com os concorrentes antes de entrar no radar.",
-    cta: { label: "Ver ofertas do radar", href: "#ofertas" },
-    Illustration: CartIllustration,
+      "Cada produto é comparado com os concorrentes antes de entrar no radar — nada entra sem merecer.",
+    ctas: [{ label: "Ver ofertas do radar", href: "#ofertas", style: "fire" as const }],
   },
   {
+    variant: "icon" as const,
     badge: "Atualizado todo dia",
     title: "Novas ofertas\nsempre no ar",
     description: "O radar não desliga. Volte sempre pra não perder a próxima detecção.",
-    cta: { label: "Ver ofertas do radar", href: "#ofertas" },
+    ctas: [{ label: "Ver ofertas do radar", href: "#ofertas", style: "fire" as const }],
     Illustration: TagIllustration,
   },
 ];
+
+function renderTitle(title: string, highlight?: string) {
+  if (!highlight) return title;
+  const parts = title.split(highlight);
+  return (
+    <>
+      {parts[0]}
+      <span className="text-fire">{highlight}</span>
+      {parts[1]}
+    </>
+  );
+}
 
 export default function BannerCarousel() {
   const [index, setIndex] = useState(0);
@@ -220,7 +197,6 @@ export default function BannerCarousel() {
   }
 
   const slide = SLIDES[index];
-  const { Illustration } = slide;
 
   return (
     <div
@@ -242,48 +218,78 @@ export default function BannerCarousel() {
             {slide.badge}
           </span>
           <h1 className="mt-4 whitespace-pre-line font-display text-2xl font-extrabold leading-tight sm:mt-5 sm:text-4xl lg:text-5xl">
-            {slide.title}
+            {renderTitle(slide.title, "highlight" in slide ? slide.highlight : undefined)}
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm text-white/70 sm:mx-0 sm:mt-4 sm:text-base">
             {slide.description}
           </p>
-          <Link
-            href={slide.cta.href}
-            className="btn-fire mt-5 inline-block rounded-full px-6 py-3 font-display text-sm font-bold text-white sm:mt-6 sm:px-7 sm:py-3.5 sm:text-base"
-          >
-            {slide.cta.label}
-          </Link>
+          <div className="mt-5 flex flex-col items-center gap-3 sm:mt-6 sm:flex-row sm:items-start">
+            {slide.ctas.map((cta) => (
+              <Link
+                key={cta.label}
+                href={cta.href}
+                className={
+                  cta.style === "fire"
+                    ? "btn-fire inline-block rounded-full px-6 py-3 font-display text-sm font-bold text-white sm:px-7 sm:py-3.5 sm:text-base"
+                    : "inline-block rounded-full border border-white/25 px-6 py-3 font-display text-sm font-semibold text-white/85 transition-colors hover:border-accent hover:text-white sm:px-7 sm:py-3.5 sm:text-base"
+                }
+              >
+                {cta.label}
+              </Link>
+            ))}
+          </div>
         </div>
 
-        {/* Ícone principal + selinhos flutuantes + logo em destaque */}
-        <div className="relative h-32 w-32 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
-          <Illustration />
-
-          <FloatBadge className="left-0 top-1 sm:-left-2 sm:top-4" delay="0s" size={30}>
-            {ICON_DOLLAR}
-          </FloatBadge>
-          <FloatBadge className="right-0 top-0 sm:-right-3 sm:top-2" delay="0.8s" size={26}>
-            {ICON_PERCENT}
-          </FloatBadge>
-          <FloatBadge className="bottom-1 right-1 sm:-right-2 sm:bottom-6" delay="1.6s" size={24}>
-            {ICON_STAR}
-          </FloatBadge>
-
-          {/* Selo com a logo do Radar de Ofertas, sempre em destaque */}
-          <div
-            className="animate-float-slow absolute -bottom-2 left-1/2 -translate-x-1/2 sm:bottom-2 sm:left-0 sm:translate-x-0"
-            style={{ animationDelay: "0.4s" }}
-          >
+        {slide.variant === "hero" ? (
+          /* Logo grande em destaque, com anéis de pulso — mesmo tratamento
+             que a antiga seção de texto abaixo do carrossel. */
+          <div className="animate-float-slow relative shrink-0">
             <span className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-accent/50" aria-hidden="true" />
+            <span
+              className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-amber/40"
+              style={{ animationDelay: "1.2s" }}
+              aria-hidden="true"
+            />
+            <span className="absolute inset-[-10%] rounded-full bg-accent/20 blur-3xl" aria-hidden="true" />
             <Image
               src="/logo.png"
               alt="Radar de Ofertas"
-              width={48}
-              height={48}
-              className="relative rounded-full shadow-glow ring-2 ring-white/20 sm:h-14 sm:w-14"
+              width={260}
+              height={260}
+              priority
+              className="relative w-[150px] rounded-full shadow-glow sm:w-[200px] lg:w-[240px]"
             />
           </div>
-        </div>
+        ) : (
+          /* Ícone principal + selinhos flutuantes + selo com a logo */
+          <div className="relative h-32 w-32 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
+            <slide.Illustration />
+
+            <FloatBadge className="left-0 top-1 sm:-left-2 sm:top-4" delay="0s" size={30}>
+              {ICON_DOLLAR}
+            </FloatBadge>
+            <FloatBadge className="right-0 top-0 sm:-right-3 sm:top-2" delay="0.8s" size={26}>
+              {ICON_PERCENT}
+            </FloatBadge>
+            <FloatBadge className="bottom-1 right-1 sm:-right-2 sm:bottom-6" delay="1.6s" size={24}>
+              {ICON_STAR}
+            </FloatBadge>
+
+            <div
+              className="animate-float-slow absolute -bottom-2 left-1/2 -translate-x-1/2 sm:bottom-2 sm:left-0 sm:translate-x-0"
+              style={{ animationDelay: "0.4s" }}
+            >
+              <span className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-accent/50" aria-hidden="true" />
+              <Image
+                src="/logo.png"
+                alt="Radar de Ofertas"
+                width={48}
+                height={48}
+                className="relative rounded-full shadow-glow ring-2 ring-white/20 sm:h-14 sm:w-14"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Setas — visíveis também no celular, tamanho maior pra ser fácil de tocar */}
