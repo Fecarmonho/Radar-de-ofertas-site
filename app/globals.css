@@ -1,0 +1,70 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:focus-visible {
+  outline: 2px solid #ff6b00;
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Fundo do hero: gradiente noturno com brilho laranja */
+.hero-night {
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(255, 107, 0, 0.18), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(232, 80, 15, 0.12), transparent 55%),
+    linear-gradient(160deg, #10161f 0%, #151d29 55%, #1b2430 100%);
+}
+
+/* Grade sutil de "painel de radar" por cima do hero */
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 40%, transparent 100%);
+}
+
+/* Feixe giratório do radar */
+.radar-beam {
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 107, 0, 0.55) 0deg,
+    rgba(255, 107, 0, 0.15) 55deg,
+    transparent 90deg
+  );
+}
+
+/* Texto com gradiente laranja */
+.text-fire {
+  background: linear-gradient(92deg, #ffb347 0%, #ff6b00 45%, #e8500f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-fire {
+  background: linear-gradient(135deg, #ff8a1e 0%, #ff6b00 50%, #e8500f 100%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-fire:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 107, 0, 0.45);
+  filter: brightness(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-beam,
+  .animate-radar-sweep,
+  .animate-pulse-ring,
+  .animate-float-slow,
+  .animate-blink {
+    animation: none !important;
+  }
+}
