@@ -59,7 +59,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12">
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
       {/* eslint-disable-next-line react/no-danger */}
       <script
         type="application/ld+json"
@@ -69,7 +69,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       <span className="text-xs font-bold uppercase tracking-widest text-signal">
         {NETWORKS[product.network].label}
       </span>
-      <h1 className="mt-2 font-display text-3xl font-bold">{product.title}</h1>
+      <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl">{product.title}</h1>
 
       <div className="relative my-6 aspect-video overflow-hidden rounded-2xl border border-ink/8 bg-gradient-to-br from-paper to-ink/5 shadow-card">
         <Image

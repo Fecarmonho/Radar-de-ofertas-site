@@ -31,6 +31,7 @@ module.exports = {
         blink: "blink 2s ease-in-out infinite",
         marquee: "marquee 28s linear infinite",
         "shrink-x": "shrink-x linear forwards",
+        "fade-slide": "fade-slide 0.5s ease-out",
       },
       keyframes: {
         "radar-sweep": {
@@ -56,6 +57,10 @@ module.exports = {
         "shrink-x": {
           "0%": { transform: "scaleX(0)" },
           "100%": { transform: "scaleX(1)" },
+        },
+        "fade-slide": {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
     },

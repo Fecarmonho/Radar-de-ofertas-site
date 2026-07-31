@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getAllProducts } from "@/lib/products-db";
 import ProductCard from "@/components/ProductCard";
-import HeroCarousel from "@/components/HeroCarousel";
+import BannerCarousel from "@/components/BannerCarousel";
 import MarqueeTicker from "@/components/MarqueeTicker";
 
 // Revalida a home a cada 60s, assim produtos criados/editados no painel
@@ -50,6 +50,9 @@ export default async function HomePage() {
   const products = await getAllProducts();
   return (
     <main>
+      {/* ── BANNER (topo absoluto da página) ─────────────────────── */}
+      <BannerCarousel />
+
       {/* ── HERO ──────────────────────────────────────────────── */}
       <section className="hero-night relative overflow-hidden text-white">
         <div className="hero-grid absolute inset-0" aria-hidden="true" />
@@ -129,13 +132,6 @@ export default async function HomePage() {
             />
           </div>
         </div>
-
-        {/* ── DESTAQUES (carrossel) ────────────────────────────── */}
-        {products.length > 0 && (
-          <div className="relative mx-auto max-w-6xl px-4 pb-16 lg:pb-20">
-            <HeroCarousel products={products} />
-          </div>
-        )}
 
         {/* Transição suave para a área clara */}
         <div
