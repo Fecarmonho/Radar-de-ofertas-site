@@ -76,6 +76,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
           src={product.image}
           alt={product.title}
           fill
+          unoptimized={product.image.startsWith("data:")}
           className="object-contain p-8"
         />
       </div>

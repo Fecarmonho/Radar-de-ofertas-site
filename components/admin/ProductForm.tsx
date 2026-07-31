@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Product, Section } from "@/lib/affiliates";
+import { compressImageToBase64 } from "@/lib/image-compress";
 
 const CATEGORIES = ["eletronicos", "casa", "beleza", "moda", "outros"];
 
@@ -33,7 +34,7 @@ export default function ProductForm({
       slug: "",
       title: "",
       shortDescription: "",
-      image: "/placeholder-produto.svg",
+      image: "",
       price: "",
       category: CATEGORIES[0],
       network: "shopee",
@@ -44,70 +45,52 @@ export default function ProductForm({
       reviewCount: undefined,
     }
   );
-  const [slugEditedManually, setSlugEditedManually] = useState(isEditing);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [scraping, setScraping] = useState(false);
-  const [scrapeMessage, setScrapeMessage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   function update<K extends keyof Product>(key: K, value: Product[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function applyTitle(value: string) {
+  function handleTitleChange(value: string) {
     update("title", value);
-    if (!slugEditedManually) {
+    // O endereço da página (slug) é só o "endereço interno" da nossa
+    // página de revisão do produto — quem leva o cliente até a Shopee é
+    // sempre o link de afiliado. Por isso ele é gerado sozinho a partir
+    // do nome, sem precisar de campo no formulário. Numa edição, o slug
+    // já existente não muda (evita quebrar um link que já foi divulgado).
+    if (!isEditing) {
       update("slug", slugify(value));
     }
   }
 
-  function handleTitleChange(value: string) {
-    applyTitle(value);
-  }
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  async function handleAutoFill() {
-    if (!form.networkProductId) {
-      setScrapeMessage("Cole o link da Shopee no campo acima primeiro.");
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Escolha um arquivo de imagem.");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      setUploadError("Essa foto é maior que 15MB, escolhe uma menor.");
       return;
     }
 
-    setScraping(true);
-    setScrapeMessage(null);
+    setUploading(true);
+    setUploadError(null);
     try {
-      const response = await fetch("/api/admin/scrape-shopee", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: form.networkProductId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setScrapeMessage(data.error ?? "Não consegui ler os dados desse link.");
-        return;
-      }
-
-      if (data.title) applyTitle(data.title);
-      if (data.image) update("image", data.image);
-      if (data.description) update("shortDescription", data.description);
-      if (data.price) update("price", data.price);
-
-      const filled = [
-        data.title && "nome",
-        data.image && "foto",
-        data.description && "descrição",
-        data.price && "preço",
-      ].filter(Boolean);
-
-      setScrapeMessage(
-        filled.length
-          ? `Preenchi automaticamente: ${filled.join(", ")}. Confira e ajuste o que precisar.`
-          : "Não consegui identificar os dados desse link. Preencha manualmente."
-      );
-    } catch {
-      setScrapeMessage("Não consegui acessar esse link agora. Preencha manualmente.");
+      // Comprime no navegador e guarda como base64 direto no produto —
+      // sem precisar subir a foto pra nenhum serviço externo.
+      const base64 = await compressImageToBase64(file);
+      update("image", base64);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Falha ao processar a foto.");
     } finally {
-      setScraping(false);
+      setUploading(false);
+      e.target.value = ""; // permite escolher o mesmo arquivo de novo, se precisar
     }
   }
 
@@ -115,8 +98,12 @@ export default function ProductForm({
     e.preventDefault();
     setError(null);
 
-    if (!form.slug || !form.title || !form.price || !form.networkProductId) {
-      setError("Preencha nome, endereço (slug), preço e link de afiliado.");
+    if (!form.title || !form.price || !form.networkProductId) {
+      setError("Preencha nome, preço e link de afiliado.");
+      return;
+    }
+    if (!form.image) {
+      setError("Envie uma foto do produto.");
       return;
     }
 
@@ -152,7 +139,7 @@ export default function ProductForm({
       onSubmit={handleSubmit}
       className="space-y-5 rounded-2xl border border-ink/8 bg-white p-6 shadow-card sm:p-8"
     >
-      <div className="rounded-xl border border-fire/20 bg-fire/5 p-4">
+      <div>
         <label className="block text-sm font-medium text-ink/80">
           Link de afiliado da Shopee
           <input
@@ -164,19 +151,9 @@ export default function ProductForm({
           />
         </label>
         <p className="mt-1 text-xs text-ink/40">
-          Gerado no painel affiliate.shopee.com.br → botão "Obter link".
+          Gerado no painel affiliate.shopee.com.br → botão "Obter link". É esse
+          link que leva o cliente até a Shopee quando ele clica em "Ver oferta".
         </p>
-        <button
-          type="button"
-          onClick={handleAutoFill}
-          disabled={scraping}
-          className="mt-3 rounded-full border border-fire/40 bg-white px-4 py-2 text-sm font-bold text-fire transition-colors hover:bg-fire/10 disabled:opacity-60"
-        >
-          {scraping ? "Buscando dados..." : "✨ Preencher automaticamente"}
-        </button>
-        {scrapeMessage && (
-          <p className="mt-2 text-xs font-medium text-ink/60">{scrapeMessage}</p>
-        )}
       </div>
 
       <div>
@@ -190,25 +167,6 @@ export default function ProductForm({
             placeholder="Ex: Air Fryer 4 Litros"
           />
         </label>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-ink/80">
-          Endereço da página (slug)
-          <input
-            required
-            value={form.slug}
-            onChange={(e) => {
-              setSlugEditedManually(true);
-              update("slug", slugify(e.target.value));
-            }}
-            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 font-mono text-sm focus:border-accent focus:outline-none"
-            placeholder="air-fryer-4-litros"
-          />
-        </label>
-        <p className="mt-1 text-xs text-ink/40">
-          Preenche sozinho a partir do nome. Só letras minúsculas e traço.
-        </p>
       </div>
 
       <div>
@@ -282,24 +240,36 @@ export default function ProductForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-ink/80">
-          Foto do produto (URL)
-          <input
-            value={form.image}
-            onChange={(e) => update("image", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
-            placeholder="/placeholder-produto.svg"
-          />
-        </label>
-        {form.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={form.image}
-            alt="Prévia da foto"
-            className="mt-2 h-24 w-24 rounded-lg border border-ink/10 object-cover"
-            onError={(e) => (e.currentTarget.style.display = "none")}
-          />
-        )}
+        <label className="block text-sm font-medium text-ink/80">Foto do produto</label>
+        <div className="mt-1 flex items-center gap-4">
+          {form.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={form.image}
+              alt="Prévia da foto"
+              className="h-20 w-20 rounded-lg border border-ink/10 object-cover"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-ink/15 text-[10px] text-ink/30">
+              Sem foto
+            </div>
+          )}
+
+          <label className="cursor-pointer rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold text-ink/70 hover:border-ink/30">
+            {uploading ? "Processando..." : form.image ? "Trocar foto" : "Escolher foto"}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+        </div>
+        <p className="mt-1 text-xs text-ink/40">
+          Tira uma foto ou escolhe da galeria do celular, ou envia um arquivo do computador.
+        </p>
+        {uploadError && <p className="mt-1 text-xs font-medium text-ember">{uploadError}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -344,7 +314,7 @@ export default function ProductForm({
       <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || uploading}
           className="btn-fire rounded-full px-6 py-3 font-display font-bold text-white disabled:opacity-60"
         >
           {saving ? "Salvando..." : isEditing ? "Salvar alterações" : "Adicionar produto"}

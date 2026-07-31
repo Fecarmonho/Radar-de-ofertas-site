@@ -155,7 +155,7 @@ export default async function HomePage() {
             desliga.
           </p>
           <Link
-            href="#ofertas"
+            href="/#ofertas"
             className="btn-fire mt-8 inline-block rounded-full px-8 py-4 font-display font-bold text-white"
           >
             Explorar ofertas

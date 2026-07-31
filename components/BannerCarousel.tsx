@@ -118,8 +118,8 @@ const SLIDES = [
     description:
       "Varremos a Shopee para encontrar produtos que valem cada centavo. Você só vê o que passou no nosso radar.",
     ctas: [
-      { label: "Ver ofertas no radar", href: "#ofertas", style: "fire" as const },
-      { label: "Como funciona", href: "#como-funciona", style: "outline" as const },
+      { label: "Ver ofertas no radar", href: "/#ofertas", style: "fire" as const },
+      { label: "Como funciona", href: "/#como-funciona", style: "outline" as const },
     ],
   },
   {
@@ -128,7 +128,7 @@ const SLIDES = [
     title: "Compre com\nsegurança total",
     description:
       "Todo link leva direto pra loja oficial da Shopee — você compra, garante e recebe.",
-    ctas: [{ label: "Como funciona", href: "#como-funciona", style: "fire" as const }],
+    ctas: [{ label: "Como funciona", href: "/#como-funciona", style: "fire" as const }],
     Illustration: BoxIllustration,
   },
   {
@@ -138,14 +138,14 @@ const SLIDES = [
     highlight: "custo-benefício",
     description:
       "Cada produto é comparado com os concorrentes antes de entrar no radar — nada entra sem merecer.",
-    ctas: [{ label: "Ver ofertas do radar", href: "#ofertas", style: "fire" as const }],
+    ctas: [{ label: "Ver ofertas do radar", href: "/#ofertas", style: "fire" as const }],
   },
   {
     variant: "icon" as const,
     badge: "Atualizado todo dia",
     title: "Novas ofertas\nsempre no ar",
     description: "O radar não desliga. Volte sempre pra não perder a próxima detecção.",
-    ctas: [{ label: "Ver ofertas do radar", href: "#ofertas", style: "fire" as const }],
+    ctas: [{ label: "Ver ofertas do radar", href: "/#ofertas", style: "fire" as const }],
     Illustration: TagIllustration,
   },
 ];

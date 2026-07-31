@@ -109,3 +109,11 @@ Configure as mesmas variáveis do `.env.local` em **Project Settings →
 Environment Variables** na Vercel. Atenção especial ao
 `FIREBASE_PRIVATE_KEY`: cole o valor inteiro, incluindo as quebras de
 linha `\n` como estão no arquivo — a Vercel lida bem com isso.
+
+## Sobre as fotos dos produtos
+
+As fotos cadastradas no painel são comprimidas no próprio navegador e
+guardadas como texto (base64) direto no produto, dentro do Firestore
+— não usa o Firebase Storage, então **não precisa do plano Blaze**
+nem de cartão cadastrado. O Firestore free (Spark) é suficiente pro
+tamanho desse projeto.
