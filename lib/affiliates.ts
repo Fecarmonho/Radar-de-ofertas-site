@@ -26,10 +26,20 @@ export interface Product {
   network: Network;
   /** ID/URL do produto na rede de origem, sem os parâmetros de afiliado */
   networkProductId: string;
+  /** Slug da seção (ex: "fones-de-ouvido") em que o produto aparece na home. */
+  sectionSlug?: string;
   /** Tags para SEO / schema.org */
   brand?: string;
   rating?: number;
   reviewCount?: number;
+}
+
+/** Seção editorial da home (ex: "Fones de ouvido", "Casa"), criada pelo admin. */
+export interface Section {
+  slug: string;
+  name: string;
+  /** Define a ordem de exibição na home — menor aparece primeiro. */
+  order: number;
 }
 
 interface NetworkConfig {

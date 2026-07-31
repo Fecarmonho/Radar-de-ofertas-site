@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getAllProducts } from "@/lib/products-db";
+import { getAllSections } from "@/lib/sections-db";
+import { Product } from "@/lib/affiliates";
 import ProductCard from "@/components/ProductCard";
 import BannerCarousel from "@/components/BannerCarousel";
 import MarqueeTicker from "@/components/MarqueeTicker";
@@ -44,7 +46,27 @@ const steps = [
 ];
 
 export default async function HomePage() {
-  const products = await getAllProducts();
+  const [products, sections] = await Promise.all([getAllProducts(), getAllSections()]);
+
+  const bySection = new Map<string, Product[]>();
+  const semSecao: Product[] = [];
+  for (const product of products) {
+    if (product.sectionSlug && sections.some((s) => s.slug === product.sectionSlug)) {
+      const list = bySection.get(product.sectionSlug) ?? [];
+      list.push(product);
+      bySection.set(product.sectionSlug, list);
+    } else {
+      semSecao.push(product);
+    }
+  }
+
+  const rows = [
+    ...sections
+      .filter((s) => (bySection.get(s.slug) ?? []).length > 0)
+      .map((s) => ({ title: s.name, products: bySection.get(s.slug)! })),
+    ...(semSecao.length > 0 ? [{ title: "Outras ofertas", products: semSecao }] : []),
+  ];
+
   return (
     <main>
       {/* ── BANNER (topo absoluto da página) ─────────────────────── */}
@@ -52,29 +74,35 @@ export default async function HomePage() {
 
       <MarqueeTicker />
 
-      {/* ── OFERTAS ───────────────────────────────────────────── */}
-      <section id="ofertas" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16">
-        <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-signal">
-              Detectadas agora
-            </p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">
-              Ofertas no radar
-            </h2>
-          </div>
-          <p className="max-w-sm text-sm text-ink/60">
-            Cada produto abaixo foi comparado com os concorrentes antes de
-            entrar aqui. Preço confere na loja oficial.
+      {/* ── OFERTAS (uma fileira por seção) ──────────────────────── */}
+      <div id="ofertas" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16">
+        {rows.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-ink/15 bg-white p-10 text-center text-sm text-ink/50">
+            Nenhuma oferta cadastrada ainda.
           </p>
-        </div>
+        ) : (
+          rows.map((row, i) => (
+            <section key={row.title} className={i > 0 ? "mt-16" : ""}>
+              <div className="mb-8 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-signal">
+                    {i === 0 ? "Detectadas agora" : "No radar"}
+                  </p>
+                  <h2 className="mt-2 font-display text-2xl font-bold text-ink sm:text-3xl">
+                    {row.title}
+                  </h2>
+                </div>
+              </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
-          {products.map((product) => (
-            <ProductCard key={product.slug} product={product} />
-          ))}
-        </div>
-      </section>
+              <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+                {row.products.map((product) => (
+                  <ProductCard key={product.slug} product={product} />
+                ))}
+              </div>
+            </section>
+          ))
+        )}
+      </div>
 
       {/* ── COMO FUNCIONA ─────────────────────────────────────── */}
       <section

@@ -208,88 +208,97 @@ export default function BannerCarousel() {
     >
       <div className="hero-grid absolute inset-0" aria-hidden="true" />
 
+      {/* Trilho que desliza — todos os slides ficam lado a lado, e a gente
+          move o trilho inteiro com transform, criando o efeito de arraste. */}
       <div
-        key={index}
-        className="animate-fade-slide relative flex flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24"
+        className="flex transition-transform duration-700 ease-out"
+        style={{ transform: `translateX(-${index * 100}%)` }}
       >
-        <div className="max-w-lg text-center text-white sm:text-left">
-          <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber">
-            <span className="h-2 w-2 animate-blink rounded-full bg-accent" />
-            {slide.badge}
-          </span>
-          <h1 className="mt-4 whitespace-pre-line font-display text-2xl font-extrabold leading-tight sm:mt-5 sm:text-4xl lg:text-5xl">
-            {renderTitle(slide.title, "highlight" in slide ? slide.highlight : undefined)}
-          </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm text-white/70 sm:mx-0 sm:mt-4 sm:text-base">
-            {slide.description}
-          </p>
-          <div className="mt-5 flex flex-col items-center gap-3 sm:mt-6 sm:flex-row sm:items-start">
-            {slide.ctas.map((cta) => (
-              <Link
-                key={cta.label}
-                href={cta.href}
-                className={
-                  cta.style === "fire"
-                    ? "btn-fire inline-block rounded-full px-6 py-3 font-display text-sm font-bold text-white sm:px-7 sm:py-3.5 sm:text-base"
-                    : "inline-block rounded-full border border-white/25 px-6 py-3 font-display text-sm font-semibold text-white/85 transition-colors hover:border-accent hover:text-white sm:px-7 sm:py-3.5 sm:text-base"
-                }
-              >
-                {cta.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {slide.variant === "hero" ? (
-          /* Logo grande em destaque, com anéis de pulso — mesmo tratamento
-             que a antiga seção de texto abaixo do carrossel. */
-          <div className="animate-float-slow relative shrink-0">
-            <span className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-accent/50" aria-hidden="true" />
-            <span
-              className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-amber/40"
-              style={{ animationDelay: "1.2s" }}
-              aria-hidden="true"
-            />
-            <span className="absolute inset-[-10%] rounded-full bg-accent/20 blur-3xl" aria-hidden="true" />
-            <Image
-              src="/logo.png"
-              alt="Radar de Ofertas"
-              width={260}
-              height={260}
-              priority
-              className="relative w-[150px] rounded-full shadow-glow sm:w-[200px] lg:w-[240px]"
-            />
-          </div>
-        ) : (
-          /* Ícone principal + selinhos flutuantes + selo com a logo */
-          <div className="relative h-32 w-32 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
-            <slide.Illustration />
-
-            <FloatBadge className="left-0 top-1 sm:-left-2 sm:top-4" delay="0s" size={30}>
-              {ICON_DOLLAR}
-            </FloatBadge>
-            <FloatBadge className="right-0 top-0 sm:-right-3 sm:top-2" delay="0.8s" size={26}>
-              {ICON_PERCENT}
-            </FloatBadge>
-            <FloatBadge className="bottom-1 right-1 sm:-right-2 sm:bottom-6" delay="1.6s" size={24}>
-              {ICON_STAR}
-            </FloatBadge>
-
-            <div
-              className="animate-float-slow absolute -bottom-2 left-1/2 -translate-x-1/2 sm:bottom-2 sm:left-0 sm:translate-x-0"
-              style={{ animationDelay: "0.4s" }}
-            >
-              <span className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-accent/50" aria-hidden="true" />
-              <Image
-                src="/logo.png"
-                alt="Radar de Ofertas"
-                width={48}
-                height={48}
-                className="relative rounded-full shadow-glow ring-2 ring-white/20 sm:h-14 sm:w-14"
-              />
+        {SLIDES.map((s, i) => (
+          <div
+            key={i}
+            className="flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24"
+          >
+            <div className="max-w-lg text-center text-white sm:text-left">
+              <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber">
+                <span className="h-2 w-2 animate-blink rounded-full bg-accent" />
+                {s.badge}
+              </span>
+              <h1 className="mt-4 whitespace-pre-line font-display text-2xl font-extrabold leading-tight sm:mt-5 sm:text-4xl lg:text-5xl">
+                {renderTitle(s.title, "highlight" in s ? s.highlight : undefined)}
+              </h1>
+              <p className="mx-auto mt-3 max-w-md text-sm text-white/70 sm:mx-0 sm:mt-4 sm:text-base">
+                {s.description}
+              </p>
+              <div className="mt-5 flex flex-col items-center gap-3 sm:mt-6 sm:flex-row sm:items-start">
+                {s.ctas.map((cta) => (
+                  <Link
+                    key={cta.label}
+                    href={cta.href}
+                    className={
+                      cta.style === "fire"
+                        ? "btn-fire inline-block rounded-full px-6 py-3 font-display text-sm font-bold text-white sm:px-7 sm:py-3.5 sm:text-base"
+                        : "inline-block rounded-full border border-white/25 px-6 py-3 font-display text-sm font-semibold text-white/85 transition-colors hover:border-accent hover:text-white sm:px-7 sm:py-3.5 sm:text-base"
+                    }
+                  >
+                    {cta.label}
+                  </Link>
+                ))}
+              </div>
             </div>
+
+            {s.variant === "hero" ? (
+              /* Logo grande em destaque, com anéis de pulso — mesmo
+                 tratamento que a antiga seção de texto abaixo do carrossel. */
+              <div className="animate-float-slow relative shrink-0">
+                <span className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-accent/50" aria-hidden="true" />
+                <span
+                  className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-amber/40"
+                  style={{ animationDelay: "1.2s" }}
+                  aria-hidden="true"
+                />
+                <span className="absolute inset-[-10%] rounded-full bg-accent/20 blur-3xl" aria-hidden="true" />
+                <Image
+                  src="/logo.png"
+                  alt="Radar de Ofertas"
+                  width={260}
+                  height={260}
+                  priority={i === 0}
+                  className="relative w-[150px] rounded-full shadow-glow sm:w-[200px] lg:w-[240px]"
+                />
+              </div>
+            ) : (
+              /* Ícone principal + selinhos flutuantes + selo com a logo */
+              <div className="relative h-32 w-32 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
+                <s.Illustration />
+
+                <FloatBadge className="left-0 top-1 sm:-left-2 sm:top-4" delay="0s" size={30}>
+                  {ICON_DOLLAR}
+                </FloatBadge>
+                <FloatBadge className="right-0 top-0 sm:-right-3 sm:top-2" delay="0.8s" size={26}>
+                  {ICON_PERCENT}
+                </FloatBadge>
+                <FloatBadge className="bottom-1 right-1 sm:-right-2 sm:bottom-6" delay="1.6s" size={24}>
+                  {ICON_STAR}
+                </FloatBadge>
+
+                <div
+                  className="animate-float-slow absolute -bottom-2 left-1/2 -translate-x-1/2 sm:bottom-2 sm:left-0 sm:translate-x-0"
+                  style={{ animationDelay: "0.4s" }}
+                >
+                  <span className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-accent/50" aria-hidden="true" />
+                  <Image
+                    src="/logo.png"
+                    alt="Radar de Ofertas"
+                    width={48}
+                    height={48}
+                    className="relative rounded-full shadow-glow ring-2 ring-white/20 sm:h-14 sm:w-14"
+                  />
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        ))}
       </div>
 
       {/* Setas — visíveis também no celular, tamanho maior pra ser fácil de tocar */}

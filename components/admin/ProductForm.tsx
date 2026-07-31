@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Product } from "@/lib/affiliates";
+import Link from "next/link";
+import { Product, Section } from "@/lib/affiliates";
 
 const CATEGORIES = ["eletronicos", "casa", "beleza", "moda", "outros"];
 
@@ -17,9 +18,12 @@ function slugify(text: string) {
 
 export default function ProductForm({
   initialProduct,
+  sections,
 }: {
   /** Se vier preenchido, o formulário funciona em modo edição. */
   initialProduct?: Product;
+  /** Seções cadastradas no admin, pro seletor "Seção da home". */
+  sections: Section[];
 }) {
   const router = useRouter();
   const isEditing = Boolean(initialProduct);
@@ -34,6 +38,7 @@ export default function ProductForm({
       category: CATEGORIES[0],
       network: "shopee",
       networkProductId: "",
+      sectionSlug: sections[0]?.slug,
       brand: "",
       rating: undefined,
       reviewCount: undefined,
@@ -217,6 +222,34 @@ export default function ProductForm({
             className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
             placeholder="Diga com suas palavras por que o produto vale a pena."
           />
+        </label>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-ink/80">
+          Seção na home
+          {sections.length === 0 ? (
+            <p className="mt-1 rounded-lg border border-dashed border-ink/15 bg-paper px-3 py-2 text-xs text-ink/50">
+              Nenhuma seção criada ainda.{" "}
+              <Link href="/admin/secoes/nova" className="font-semibold text-signal">
+                Crie uma seção
+              </Link>{" "}
+              (ex: "Fones de ouvido") pra organizar seus produtos em fileiras na home.
+            </p>
+          ) : (
+            <select
+              value={form.sectionSlug ?? ""}
+              onChange={(e) => update("sectionSlug", e.target.value || undefined)}
+              className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
+            >
+              <option value="">Sem seção</option>
+              {sections.map((section) => (
+                <option key={section.slug} value={section.slug}>
+                  {section.name}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
       </div>
 
