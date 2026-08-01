@@ -183,43 +183,62 @@ function montarSlides(banners: BannerFoto[]): Slide[] {
  * Faixa com a foto cadastrada no painel, no mesmo formato das outras:
  * texto de um lado, imagem do outro.
  *
- * A imagem usa object-contain, então aparece inteira e sem deformar,
- * seja ela deitada, quadrada ou em pé. Sem título, a foto ocupa a faixa
- * sozinha, num tamanho maior.
+ * Dois cuidados aqui, aprendidos na prática:
+ *
+ * 1. A moldura da foto não tem proporção fixa — ela abraça a imagem, que
+ *    só tem limite de altura e largura. Uma foto em pé (o caso comum de
+ *    quem fotografa do celular) numa moldura deitada ficaria minúscula
+ *    no meio de um vazio enorme, principalmente no computador.
+ *
+ * 2. O fundo da faixa é a própria foto ampliada e desfocada. Assim o
+ *    espaço que sobra ao redor vira parte do visual em vez de buraco
+ *    preto — o mesmo tratamento que o carrossel de produtos já usa.
  */
 function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean }) {
   const temTexto = Boolean(foto.title || foto.description);
+  const semOtimizador = foto.image.startsWith("data:");
 
   const imagem = (
-    <div
-      className={`relative aspect-[4/3] shrink-0 ${
-        temTexto ? "w-[220px] sm:w-[300px] lg:w-[380px]" : "w-full max-w-2xl"
+    <Image
+      src={foto.image}
+      alt={foto.alt || foto.title || ""}
+      // Medidas nominais: quem manda no tamanho final é o CSS abaixo.
+      width={1000}
+      height={1000}
+      priority={prioridade}
+      unoptimized={semOtimizador}
+      className={`h-auto w-auto rounded-2xl object-contain shadow-glow ring-1 ring-white/15 ${
+        temTexto
+          ? "max-h-[200px] max-w-[240px] sm:max-h-[300px] sm:max-w-[320px] lg:max-h-[360px] lg:max-w-[400px]"
+          : "max-h-[240px] max-w-[300px] sm:max-h-[340px] sm:max-w-[520px] lg:max-h-[400px] lg:max-w-[620px]"
       }`}
-    >
-      <Image
-        src={foto.image}
-        alt={foto.alt || foto.title || ""}
-        fill
-        sizes={temTexto ? "(max-width: 640px) 70vw, 380px" : "(max-width: 640px) 90vw, 680px"}
-        priority={prioridade}
-        // Foto vinda do painel é base64; não passa pelo otimizador do Next.
-        unoptimized={foto.image.startsWith("data:")}
-        className="rounded-2xl object-contain"
-      />
-    </div>
+    />
   );
 
   return (
-    <div className="flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24">
+    <div className="relative flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24">
+      {/* Fundo: a mesma foto, ampliada e desfocada, preenchendo a faixa */}
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+        <Image
+          src={foto.image}
+          alt=""
+          fill
+          sizes="100vw"
+          unoptimized={semOtimizador}
+          className="scale-125 object-cover opacity-40 blur-2xl"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-night/85 via-night/70 to-night/90 sm:bg-gradient-to-r sm:from-night sm:via-night/80 sm:to-night/40" />
+      </div>
+
       {temTexto && (
-        <div className="max-w-lg text-center text-white sm:text-left">
+        <div className="relative max-w-lg text-center text-white sm:text-left">
           {foto.title && (
-            <h2 className="whitespace-pre-line font-display text-2xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
+            <h2 className="whitespace-pre-line font-display text-2xl font-extrabold leading-tight drop-shadow sm:text-4xl lg:text-5xl">
               {foto.title}
             </h2>
           )}
           {foto.description && (
-            <p className="mx-auto mt-3 max-w-md text-sm text-white/70 sm:mx-0 sm:mt-4 sm:text-base">
+            <p className="mx-auto mt-3 max-w-md text-sm text-white/80 sm:mx-0 sm:mt-4 sm:text-base">
               {foto.description}
             </p>
           )}
@@ -236,13 +255,13 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
         </div>
       )}
 
-      {/* Sem texto, a foto inteira vira o link. */}
+      {/* Sem frase escrita, a foto ocupa a faixa sozinha e o link vale nela toda. */}
       {!temTexto && foto.link ? (
-        <Link href={foto.link} className="flex w-full justify-center">
+        <Link href={foto.link} className="relative flex justify-center">
           {imagem}
         </Link>
       ) : (
-        imagem
+        <div className="relative flex shrink-0 justify-center">{imagem}</div>
       )}
     </div>
   );
