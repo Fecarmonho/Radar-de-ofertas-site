@@ -5,7 +5,7 @@ import {
   touchPriceCheckedAt,
 } from "@/lib/products-db";
 import { fetchShopeePrice, formatBRL } from "@/lib/scrape-shopee";
-import { Product } from "@/lib/affiliates";
+import { Product, isPriceRange } from "@/lib/affiliates";
 
 /**
  * Confere na Shopee o preço dos produtos cadastrados e atualiza o que
@@ -25,7 +25,12 @@ export interface PriceRefreshResult {
   updated: number;
   unchanged: number;
   failed: number;
+  /** Passaram do limite da rodada e entram na próxima */
   skipped: number;
+  /** Marcados como preço fixo pelo próprio painel */
+  fixed: number;
+  /** Preço escrito como faixa ("R$ 16,99 - R$ 48,99") — preservado como está */
+  ranges: number;
   changes: PriceChange[];
   failures: string[];
 }
@@ -37,8 +42,14 @@ const DELAY_MS = 400;
 
 export async function refreshAllPrices(): Promise<PriceRefreshResult> {
   const all = await getAllProducts();
+  const comLink = all.filter((p) => p.networkProductId);
 
-  const elegiveis = all.filter((p) => p.priceAutoUpdate !== false && p.networkProductId);
+  const automaticos = comLink.filter((p) => p.priceAutoUpdate !== false);
+  // Faixa de preço é sempre digitada à mão: a Shopee só publica um valor.
+  // Sobrescrever isso com o número único apagaria o trabalho da pessoa,
+  // então esses ficam de fora mesmo com a atualização ligada.
+  const elegiveis = automaticos.filter((p) => !isPriceRange(p.price));
+
   // Começa pelos que estão sem conferir há mais tempo, para que rodadas
   // seguidas cubram o catálogo inteiro mesmo se ele passar do limite.
   const fila = elegiveis
@@ -51,7 +62,9 @@ export async function refreshAllPrices(): Promise<PriceRefreshResult> {
     updated: 0,
     unchanged: 0,
     failed: 0,
-    skipped: all.length - fila.length,
+    skipped: elegiveis.length - fila.length,
+    fixed: comLink.length - automaticos.length,
+    ranges: automaticos.length - elegiveis.length,
     changes: [],
     failures: [],
   };

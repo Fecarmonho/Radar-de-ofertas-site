@@ -9,6 +9,8 @@ interface Resultado {
   unchanged: number;
   failed: number;
   skipped: number;
+  fixed: number;
+  ranges: number;
   changes: { slug: string; title: string; from: string; to: string }[];
 }
 
@@ -60,6 +62,8 @@ export default function RefreshPricesButton() {
             {resultado.checked} conferidos · {resultado.updated} atualizados ·{" "}
             {resultado.unchanged} sem mudança
             {resultado.failed > 0 && ` · ${resultado.failed} sem preço na página`}
+            {resultado.ranges > 0 && ` · ${resultado.ranges} com faixa de preço (preservados)`}
+            {resultado.fixed > 0 && ` · ${resultado.fixed} com preço fixo`}
             {resultado.skipped > 0 && ` · ${resultado.skipped} ficaram para a próxima`}
           </p>
           {resultado.changes.length > 0 && (

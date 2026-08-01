@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Product, Section } from "@/lib/affiliates";
+import { Product, Section, isPriceRange } from "@/lib/affiliates";
 import { compressImageToBase64 } from "@/lib/image-compress";
 
 const CATEGORIES = ["eletronicos", "casa", "beleza", "moda", "outros"];
@@ -319,6 +319,7 @@ export default function ProductForm({
               type="checkbox"
               checked={form.priceAutoUpdate !== false}
               onChange={(e) => update("priceAutoUpdate", e.target.checked)}
+              disabled={isPriceRange(form.price)}
               className="mt-0.5"
             />
             <span>
@@ -326,6 +327,14 @@ export default function ProductForm({
               Desmarque se quiser deixar esse valor fixo.
             </span>
           </label>
+          {isPriceRange(form.price) && (
+            <p className="mt-1 rounded-lg bg-paper px-3 py-2 text-xs text-ink/60">
+              Faixa de preço detectada — esse valor fica como você escreveu. A
+              Shopee só publica o preço da variação mais barata, então a
+              atualização automática não tem como remontar a faixa e por isso
+              não encosta nela.
+            </p>
+          )}
           {form.priceUpdatedAt && (
             <p className="mt-1 text-xs text-ink/40">
               Última conferida:{" "}

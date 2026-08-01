@@ -54,6 +54,13 @@ conferida.
 A rotina só aceita o preço que vem nos dados estruturados da página
 (JSON-LD). Quando não encontra, mantém o valor antigo em vez de chutar.
 
+**Produto com variação** (a Shopee mostra "R$ 16,99 - R$ 48,99"): não dá
+para puxar a faixa. Os dados estruturados trazem um valor só, o da
+variação mais barata — que é o que o site exibe, embaixo do rótulo "A
+partir de". Se você preferir mostrar a faixa inteira, digite-a no campo
+de preço: o sistema reconhece o formato e a atualização automática passa
+longe daquele produto, preservando o que você escreveu.
+
 ## Métricas
 
 `/admin/metricas` mostra visitas, cliques, taxa de clique, produtos mais

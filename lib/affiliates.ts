@@ -130,6 +130,22 @@ export function parsePriceBRL(text: string): number | undefined {
   return Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
+/**
+ * Diz se o preço foi escrito como faixa ("R$ 16,99 - R$ 48,99"), o que
+ * acontece quando o produto tem variações.
+ *
+ * A Shopee não publica os dois extremos em lugar nenhum que dê para ler
+ * de fora — a página estruturada traz um valor só, o da variação mais
+ * barata. Então uma faixa é sempre algo que a pessoa digitou à mão, e a
+ * atualização automática não deve encostar nela.
+ */
+export function isPriceRange(text: string): boolean {
+  if (!text) return false;
+  // Sem \b depois de "até": o acento não conta como caractere de palavra
+  // em JavaScript, então a borda nunca casaria ali.
+  return /\d[\d.,]*\s*(?:[-–—]|\bat[ée]|\ba\b)\s*R?\$?\s*\d/i.test(text.trim());
+}
+
 /** URL interna que o botão de compra deve usar — nunca o link de afiliado direto. */
 export function buildTrackedGoUrl(slug: string, source?: string): string {
   const params = source ? `?src=${encodeURIComponent(source)}` : "";

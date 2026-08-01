@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllProducts } from "@/lib/products-db";
+import { isPriceRange } from "@/lib/affiliates";
 import DeleteProductButton from "@/components/admin/DeleteProductButton";
 import RefreshPricesButton from "@/components/admin/RefreshPricesButton";
 
@@ -72,11 +73,13 @@ export default async function AdminHomePage() {
                     <td className="px-4 py-3 text-ink/60">
                       {product.price}
                       <span className="mt-0.5 block text-xs text-ink/35">
-                        {product.priceAutoUpdate === false
-                          ? "fixo (não atualiza sozinho)"
-                          : product.priceUpdatedAt
-                            ? `conferido em ${new Date(product.priceUpdatedAt).toLocaleDateString("pt-BR")}`
-                            : "ainda não conferido"}
+                        {isPriceRange(product.price)
+                          ? "faixa digitada (não atualiza sozinho)"
+                          : product.priceAutoUpdate === false
+                            ? "fixo (não atualiza sozinho)"
+                            : product.priceUpdatedAt
+                              ? `conferido em ${new Date(product.priceUpdatedAt).toLocaleDateString("pt-BR")}`
+                              : "ainda não conferido"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
