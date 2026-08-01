@@ -74,6 +74,35 @@ export function buildAffiliateUrl(product: Pick<Product, "network" | "networkPro
   return NETWORKS[product.network].buildUrl(product.networkProductId);
 }
 
+/**
+ * Domínios para os quais o botão de compra pode mandar o visitante.
+ * Inclui os encurtadores que o painel de afiliados da Shopee gera.
+ */
+const ALLOWED_AFFILIATE_HOSTS = [
+  "shopee.com.br",
+  "shopee.com",
+  "shope.ee",
+  "shp.ee",
+];
+
+/**
+ * O link de afiliado é digitado no painel e guardado no banco — o
+ * /api/go redireciona pra ele. Sem essa checagem, um link errado (ou um
+ * painel comprometido) transformaria o site num redirecionador aberto,
+ * que é motivo de suspensão no Google Ads e de alerta de phishing.
+ */
+export function isAllowedAffiliateUrl(url: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(url);
+    if (protocol !== "https:") return false;
+    return ALLOWED_AFFILIATE_HOSTS.some(
+      (host) => hostname === host || hostname.endsWith(`.${host}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** URL interna que o botão de compra deve usar — nunca o link de afiliado direto. */
 export function buildTrackedGoUrl(slug: string, source?: string): string {
   const params = source ? `?src=${encodeURIComponent(source)}` : "";

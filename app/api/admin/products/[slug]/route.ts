@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-session";
 import { updateProduct, deleteProduct } from "@/lib/products-db";
-import { Product } from "@/lib/affiliates";
+import { Product, isAllowedAffiliateUrl } from "@/lib/affiliates";
 
 export async function PUT(
   request: NextRequest,
@@ -17,6 +17,13 @@ export async function PUT(
   if (!product.slug || !product.title || !product.networkProductId) {
     return NextResponse.json(
       { error: "Campos obrigatórios faltando." },
+      { status: 400 }
+    );
+  }
+
+  if (!isAllowedAffiliateUrl(product.networkProductId)) {
+    return NextResponse.json(
+      { error: "O link de afiliado precisa ser um endereço https da Shopee." },
       { status: 400 }
     );
   }

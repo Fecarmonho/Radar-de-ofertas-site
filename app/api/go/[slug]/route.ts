@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProductBySlug } from "@/lib/products-db";
-import { buildAffiliateUrl } from "@/lib/affiliates";
+import { buildAffiliateUrl, isAllowedAffiliateUrl } from "@/lib/affiliates";
 
 /**
  * GET /api/go/:slug?src=ads|organic|...
@@ -25,6 +25,16 @@ export async function GET(
 
   const source = request.nextUrl.searchParams.get("src") ?? "direct";
   const destination = buildAffiliateUrl(product);
+
+  // Só redireciona pra domínio da Shopee. Se um produto antigo tiver um
+  // link fora da lista, ele para aqui em vez de virar redirecionamento
+  // aberto — o erro aparece nos logs da Vercel pra você corrigir o cadastro.
+  if (!isAllowedAffiliateUrl(destination)) {
+    console.error(
+      `[go] link de afiliado recusado no produto "${product.slug}": ${destination}`
+    );
+    return NextResponse.redirect(new URL(`/produtos/${product.slug}`, request.url));
+  }
 
   await logClick({
     slug: product.slug,

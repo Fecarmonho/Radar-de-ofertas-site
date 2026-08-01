@@ -22,6 +22,12 @@ export async function getAllAdmins(): Promise<AdminUser[]> {
   return snapshot.docs.map((doc) => doc.data() as AdminUser);
 }
 
+/** Diz se esse uid tem acesso ao painel (é o que autoriza cada request). */
+export async function isAdminUid(uid: string): Promise<boolean> {
+  const doc = await adminDb.collection(COLLECTION).doc(uid).get();
+  return doc.exists;
+}
+
 export async function countAdmins(): Promise<number> {
   const snapshot = await adminDb.collection(COLLECTION).count().get();
   return snapshot.data().count;

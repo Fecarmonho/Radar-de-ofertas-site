@@ -1,0 +1,21 @@
+# dependências
+/node_modules
+
+# build do Next
+/.next
+/out
+*.tsbuildinfo
+
+# variáveis de ambiente — NUNCA subir (contêm a chave privada do Firebase)
+.env
+.env.local
+.env*.local
+
+# chave de conta de serviço baixada do console do Firebase
+*serviceAccount*.json
+firebase-adminsdk*.json
+
+# deploy / editor / sistema
+/.vercel
+.DS_Store
+*.log

@@ -35,7 +35,12 @@ export default function AdminLoginPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ idToken }),
     });
-    if (!response.ok) throw new Error("Não foi possível criar a sessão.");
+    if (!response.ok) {
+      // Senha certa, mas o servidor recusou a sessão (ex: conta existe no
+      // Firebase e não está na lista de admins) — mostra o motivo real.
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error ?? "Não foi possível criar a sessão.");
+    }
 
     router.push("/admin");
     router.refresh();
@@ -47,9 +52,16 @@ export default function AdminLoginPage() {
     setLoading(true);
     try {
       await loginWithFirebase();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Email ou senha incorretos.");
+      // Erros do Firebase Auth vêm com code "auth/..." — aí é credencial
+      // errada mesmo. Qualquer outro erro traz a mensagem do servidor.
+      const isCredentialError = typeof err?.code === "string" && err.code.startsWith("auth/");
+      setError(
+        isCredentialError || !(err instanceof Error)
+          ? "Email ou senha incorretos."
+          : err.message
+      );
     } finally {
       setLoading(false);
     }

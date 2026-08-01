@@ -14,18 +14,34 @@ tamanho desse projeto.
    GA4 separado do site)
 3. Aguarde o projeto ser criado
 
-## 2. Ativar login por email/senha
+## 2. Ativar login por email/senha (e fechar o auto-cadastro)
 
 1. No menu lateral: **Build → Authentication**
 2. Aba **Sign-in method** → clique em **Email/senha** → ative → salvar
+3. Ainda em **Sign-in method**, role até **Configurações avançadas** e
+   marque **Impedir inscrição por meio de e-mail/senha** (em inglês:
+   *Prevent sign-up with email/password*)
+
+⚠️ O passo 3 importa: a chave `NEXT_PUBLIC_FIREBASE_API_KEY` fica
+visível no navegador (é assim mesmo), e com o auto-cadastro ligado
+qualquer pessoa consegue criar uma conta no seu projeto pela API do
+Firebase. O painel já barra quem não está na coleção `admins`, mas
+desligar o auto-cadastro fecha a porta antes ainda.
 
 ## 3. Criar o usuário do seu amigo
 
-1. Ainda em Authentication, aba **Users** → **Add user**
-2. Coloque o email e uma senha provisória pra ele
-3. Combine com ele trocar a senha depois (não tem tela de "esqueci
-   minha senha" configurada agora — se precisar, me avise que eu
-   adiciono)
+O jeito certo é **pelo próprio painel**: entre em `/admin` com a sua
+conta e vá em **Usuários → Novo**. Assim ele é criado no Firebase
+Authentication **e** registrado na coleção `admins` — que é o que
+libera o acesso.
+
+Se você criar o usuário direto pelo console do Firebase
+(Authentication → Users → Add user), ele vai conseguir digitar a senha
+certa mas receber *"Essa conta não tem acesso ao painel"*, porque falta
+o registro na coleção `admins` (veja a seção de problemas no fim).
+
+Não existe tela de "esqueci minha senha" configurada agora — se
+precisar, dá pra adicionar depois.
 
 ## 4. Criar o banco de dados (Firestore)
 
@@ -109,6 +125,34 @@ Configure as mesmas variáveis do `.env.local` em **Project Settings →
 Environment Variables** na Vercel. Atenção especial ao
 `FIREBASE_PRIVATE_KEY`: cole o valor inteiro, incluindo as quebras de
 linha `\n` como estão no arquivo — a Vercel lida bem com isso.
+
+## Quem pode entrar no painel
+
+Ter conta no Firebase Authentication **não** dá acesso ao painel. O que
+libera é existir um documento na coleção `admins` do Firestore com o
+ID igual ao **UID** do usuário. Isso é checado em toda página `/admin` e
+em toda rota `/api/admin/*` (veja `lib/admin-session.ts`).
+
+Quem cria esse documento é o próprio painel: a tela de primeiro acesso
+(`/admin/login`, quando ainda não existe nenhum admin) e a tela
+**Usuários → Novo**.
+
+### "Digitei a senha certa e não entra"
+
+A mensagem *"Essa conta não tem acesso ao painel"* quer dizer que o
+usuário existe no Authentication mas não tem registro em `admins` —
+normalmente porque foi criado à mão pelo console. Para consertar:
+
+1. **Authentication → Users** → copie o **UID** do usuário
+2. **Firestore Database → Dados** → coleção `admins` → **Adicionar
+   documento**
+3. Em "ID do documento", cole o UID
+4. Adicione os campos (todos do tipo *string*):
+   - `uid` → o mesmo UID
+   - `name` → nome da pessoa
+   - `email` → email dela
+   - `createdAt` → a data de hoje, ex: `2026-08-01T12:00:00.000Z`
+5. Salvar e tentar entrar de novo
 
 ## Sobre as fotos dos produtos
 

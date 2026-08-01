@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
+import { isAdminUid } from "@/lib/admins-db";
 
 const SESSION_COOKIE = "__session";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 14; // 14 dias
@@ -19,7 +20,17 @@ export async function POST(request: NextRequest) {
 
   try {
     // Confere que o token é legítimo e recente (evita repasse de token roubado antigo)
-    await adminAuth.verifyIdToken(idToken, true);
+    const decoded = await adminAuth.verifyIdToken(idToken, true);
+
+    // Ter conta no Firebase não é o mesmo que ter acesso ao painel: só quem
+    // está na coleção "admins" recebe cookie de sessão. Sem isso, qualquer
+    // pessoa poderia se cadastrar sozinha usando a chave pública do projeto.
+    if (!(await isAdminUid(decoded.uid))) {
+      return NextResponse.json(
+        { error: "Essa conta não tem acesso ao painel." },
+        { status: 403 }
+      );
+    }
 
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {
       expiresIn: SESSION_DURATION_MS,
