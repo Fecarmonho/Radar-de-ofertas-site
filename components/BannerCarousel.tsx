@@ -198,6 +198,13 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
   const temTexto = Boolean(foto.title || foto.description);
   const semOtimizador = foto.image.startsWith("data:");
 
+  // No celular a foto ocupa a largura toda; a partir do tablet ela divide
+  // a faixa com o texto (a porcentagem fica aqui, no contêiner, porque
+  // este tem largura definida — no <img> ela seria ambígua).
+  const molduraClasses = `relative flex w-full justify-center sm:w-auto sm:shrink-0 ${
+    temTexto ? "sm:max-w-[48%]" : "sm:max-w-[78%]"
+  }`;
+
   const imagem = (
     <Image
       src={foto.image}
@@ -207,16 +214,26 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
       height={1000}
       priority={prioridade}
       unoptimized={semOtimizador}
-      className={`h-auto w-auto rounded-2xl object-contain shadow-glow ring-1 ring-white/15 ${
+      // w-auto + max-w-full: a imagem ocupa toda a largura que o espaço
+      // ao lado permite, e a altura acompanha sozinha, mantendo a
+      // proporção. Os limites são tetos, não tamanhos fixos: foto
+      // deitada cresce até a borda, foto em pé para na altura da faixa.
+      className={`h-auto w-auto max-w-full rounded-2xl object-contain shadow-glow ring-1 ring-white/15 ${
         temTexto
-          ? "max-h-[200px] max-w-[240px] sm:max-h-[300px] sm:max-w-[320px] lg:max-h-[360px] lg:max-w-[400px]"
-          : "max-h-[240px] max-w-[300px] sm:max-h-[340px] sm:max-w-[520px] lg:max-h-[400px] lg:max-w-[620px]"
+          ? "max-h-[38vh] sm:max-h-[340px] lg:max-h-[420px]"
+          : "max-h-[50vh] sm:max-h-[400px] lg:max-h-[460px]"
       }`}
     />
   );
 
   return (
-    <div className="relative flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24">
+    <div
+      className={`relative flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24 ${
+        // Sem texto a foto é o único conteúdo: precisa ficar centralizada,
+        // senão "justify-between" a joga para o canto esquerdo.
+        temTexto ? "sm:justify-between" : "sm:justify-center"
+      }`}
+    >
       {/* Fundo: a mesma foto, ampliada e desfocada, preenchendo a faixa */}
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <Image
@@ -257,11 +274,11 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
 
       {/* Sem frase escrita, a foto ocupa a faixa sozinha e o link vale nela toda. */}
       {!temTexto && foto.link ? (
-        <Link href={foto.link} className="relative flex justify-center">
+        <Link href={foto.link} className={molduraClasses}>
           {imagem}
         </Link>
       ) : (
-        <div className="relative flex shrink-0 justify-center">{imagem}</div>
+        <div className={molduraClasses}>{imagem}</div>
       )}
     </div>
   );
