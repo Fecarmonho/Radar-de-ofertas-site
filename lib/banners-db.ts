@@ -21,6 +21,12 @@ export interface Banner {
   slot: BannerSlot;
   /** Foto em base64 (comprimida no navegador antes de subir) */
   image: string;
+  /** Frase principal da faixa. Vazio = a foto aparece sozinha, maior. */
+  title?: string;
+  /** Linha de apoio embaixo da frase */
+  description?: string;
+  /** Texto do botão. Só aparece se houver link. */
+  ctaLabel?: string;
   /** Para onde o clique leva. Vazio = faixa sem link. */
   link?: string;
   /** Descrição da imagem, para leitores de tela e quando a foto não carrega */
@@ -46,7 +52,14 @@ export async function getBanners(): Promise<Banner[]> {
 
 export async function saveBanner(
   slot: BannerSlot,
-  data: { image: string; link?: string; alt?: string }
+  data: {
+    image: string;
+    title?: string;
+    description?: string;
+    ctaLabel?: string;
+    link?: string;
+    alt?: string;
+  }
 ): Promise<void> {
   await adminDb
     .collection(COLLECTION)
@@ -54,6 +67,9 @@ export async function saveBanner(
     .set({
       slot,
       image: data.image,
+      title: data.title?.trim() || undefined,
+      description: data.description?.trim() || undefined,
+      ctaLabel: data.ctaLabel?.trim() || undefined,
       link: data.link?.trim() || undefined,
       alt: data.alt?.trim() || undefined,
       updatedAt: new Date().toISOString(),

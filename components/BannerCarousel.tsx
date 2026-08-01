@@ -154,6 +154,9 @@ const SLIDES = [
 export interface BannerFoto {
   slot: number;
   image: string;
+  title?: string;
+  description?: string;
+  ctaLabel?: string;
   link?: string;
   alt?: string;
 }
@@ -176,41 +179,73 @@ function montarSlides(banners: BannerFoto[]): Slide[] {
   return [SLIDES[0], SLIDES[1], comFoto(1, SLIDES[2]), comFoto(2, SLIDES[3])];
 }
 
-/** Faixa que é só a foto cadastrada no painel, ocupando a largura toda. */
+/**
+ * Faixa com a foto cadastrada no painel, no mesmo formato das outras:
+ * texto de um lado, imagem do outro.
+ *
+ * A imagem usa object-contain, então aparece inteira e sem deformar,
+ * seja ela deitada, quadrada ou em pé. Sem título, a foto ocupa a faixa
+ * sozinha, num tamanho maior.
+ */
 function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean }) {
-  const classes =
-    "relative w-full shrink-0 min-h-[320px] sm:min-h-[420px] lg:min-h-[480px]";
+  const temTexto = Boolean(foto.title || foto.description);
 
-  const conteudo = (
-    <>
+  const imagem = (
+    <div
+      className={`relative aspect-[4/3] shrink-0 ${
+        temTexto ? "w-[220px] sm:w-[300px] lg:w-[380px]" : "w-full max-w-2xl"
+      }`}
+    >
       <Image
         src={foto.image}
-        alt={foto.alt ?? ""}
+        alt={foto.alt || foto.title || ""}
         fill
-        sizes="100vw"
+        sizes={temTexto ? "(max-width: 640px) 70vw, 380px" : "(max-width: 640px) 90vw, 680px"}
         priority={prioridade}
         // Foto vinda do painel é base64; não passa pelo otimizador do Next.
         unoptimized={foto.image.startsWith("data:")}
-        className="object-cover"
+        className="rounded-2xl object-contain"
       />
-      {/* Escurecida no rodapé para as setas e os pontinhos não sumirem
-          numa foto clara. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-night/70 to-transparent"
-        aria-hidden="true"
-      />
-    </>
+    </div>
   );
 
-  if (foto.link) {
-    return (
-      <Link href={foto.link} className={`${classes} block`}>
-        {conteudo}
-      </Link>
-    );
-  }
+  return (
+    <div className="flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24">
+      {temTexto && (
+        <div className="max-w-lg text-center text-white sm:text-left">
+          {foto.title && (
+            <h2 className="whitespace-pre-line font-display text-2xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
+              {foto.title}
+            </h2>
+          )}
+          {foto.description && (
+            <p className="mx-auto mt-3 max-w-md text-sm text-white/70 sm:mx-0 sm:mt-4 sm:text-base">
+              {foto.description}
+            </p>
+          )}
+          {foto.link && (
+            <div className="mt-5 sm:mt-6">
+              <Link
+                href={foto.link}
+                className="btn-fire inline-block rounded-full px-6 py-3 font-display text-sm font-bold text-white sm:px-7 sm:py-3.5 sm:text-base"
+              >
+                {foto.ctaLabel || "Ver oferta"}
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
-  return <div className={classes}>{conteudo}</div>;
+      {/* Sem texto, a foto inteira vira o link. */}
+      {!temTexto && foto.link ? (
+        <Link href={foto.link} className="flex w-full justify-center">
+          {imagem}
+        </Link>
+      ) : (
+        imagem
+      )}
+    </div>
+  );
 }
 
 function renderTitle(title: string, highlight?: string) {

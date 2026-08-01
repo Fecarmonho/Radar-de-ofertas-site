@@ -15,9 +15,10 @@ export default async function CarrosselPage() {
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-ink/55">
           O carrossel da home tem quatro faixas. As duas primeiras são fixas — a
-          da logo e a da ilustração 3D. As duas últimas são suas: suba uma foto
-          para anunciar o que quiser. Espaço vazio não deixa buraco no site; a
-          faixa volta a mostrar o conteúdo padrão.
+          da logo e a da ilustração 3D. As duas últimas são suas: foto de um
+          lado e sua frase do outro, no mesmo desenho das outras. A foto aparece
+          inteira, sem corte. Espaço vazio não deixa buraco no site; a faixa
+          volta a mostrar o conteúdo padrão.
         </p>
       </div>
 
@@ -30,7 +31,14 @@ export default async function CarrosselPage() {
               slot={slot}
               initial={
                 banner
-                  ? { image: banner.image, link: banner.link, alt: banner.alt }
+                  ? {
+                      image: banner.image,
+                      title: banner.title,
+                      description: banner.description,
+                      ctaLabel: banner.ctaLabel,
+                      link: banner.link,
+                      alt: banner.alt,
+                    }
                   : null
               }
             />

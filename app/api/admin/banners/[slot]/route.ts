@@ -18,7 +18,7 @@ export async function PUT(
     return NextResponse.json({ error: "Espaço inválido." }, { status: 400 });
   }
 
-  const { image, link, alt } = await request.json();
+  const { image, title, description, ctaLabel, link, alt } = await request.json();
 
   if (typeof image !== "string" || !image) {
     return NextResponse.json({ error: "Envie uma foto." }, { status: 400 });
@@ -45,7 +45,14 @@ export async function PUT(
     );
   }
 
-  await saveBanner(Number(params.slot) as 1 | 2, { image, link, alt });
+  await saveBanner(Number(params.slot) as 1 | 2, {
+    image,
+    title: texto(title, 90),
+    description: texto(description, 180),
+    ctaLabel: texto(ctaLabel, 32),
+    link,
+    alt: texto(alt, 140),
+  });
   return NextResponse.json({ ok: true });
 }
 
@@ -64,6 +71,12 @@ export async function DELETE(
 
   await deleteBanner(Number(params.slot) as 1 | 2);
   return NextResponse.json({ ok: true });
+}
+
+/** Corta o texto no limite do que cabe bonito na faixa. */
+function texto(valor: unknown, limite: number): string | undefined {
+  if (typeof valor !== "string") return undefined;
+  return valor.trim().slice(0, limite) || undefined;
 }
 
 /**
