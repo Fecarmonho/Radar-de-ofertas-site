@@ -37,6 +37,9 @@ export default async function AdminDashboardLayout({
               <Link href="/admin/secoes" className="transition-colors hover:text-ink">
                 Seções
               </Link>
+              <Link href="/admin/usuarios" className="transition-colors hover:text-ink">
+                Usuários
+              </Link>
             </nav>
             <div className="hidden sm:block">
               <LogoutButton />

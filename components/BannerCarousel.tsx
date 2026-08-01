@@ -96,15 +96,15 @@ function TagIllustration() {
 }
 
 const ICON_DOLLAR = (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF5EB" strokeWidth="2.5" strokeLinecap="round">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFF5EB" strokeWidth="2.5" strokeLinecap="round">
     <path d="M12 2v20M17 6.5c0-1.9-2-3-5-3s-5 1.3-5 3.2c0 4 10 2 10 6 0 2-2.2 3.3-5 3.3s-5-1.1-5-3" />
   </svg>
 );
 const ICON_PERCENT = (
-  <span className="font-display text-sm font-extrabold text-white">%</span>
+  <span className="font-display text-xl font-extrabold text-white">%</span>
 );
 const ICON_STAR = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFF5EB">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFF5EB">
     <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
   </svg>
 );
@@ -272,13 +272,13 @@ export default function BannerCarousel() {
               <div className="relative h-32 w-32 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
                 <s.Illustration />
 
-                <FloatBadge className="left-0 top-1 sm:-left-2 sm:top-4" delay="0s" size={30}>
+                <FloatBadge className="left-0 top-1 sm:-left-3 sm:top-4" delay="0s" size={46}>
                   {ICON_DOLLAR}
                 </FloatBadge>
-                <FloatBadge className="right-0 top-0 sm:-right-3 sm:top-2" delay="0.8s" size={26}>
+                <FloatBadge className="right-0 top-0 sm:-right-4 sm:top-2" delay="0.8s" size={40}>
                   {ICON_PERCENT}
                 </FloatBadge>
-                <FloatBadge className="bottom-1 right-1 sm:-right-2 sm:bottom-6" delay="1.6s" size={24}>
+                <FloatBadge className="bottom-1 right-1 sm:-right-3 sm:bottom-8" delay="1.6s" size={36}>
                   {ICON_STAR}
                 </FloatBadge>
 
