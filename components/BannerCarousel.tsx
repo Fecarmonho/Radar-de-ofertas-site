@@ -150,6 +150,69 @@ const SLIDES = [
   },
 ];
 
+/** Foto cadastrada em /admin/carrossel para uma das duas últimas faixas. */
+export interface BannerFoto {
+  slot: number;
+  image: string;
+  link?: string;
+  alt?: string;
+}
+
+type SlidePadrao = (typeof SLIDES)[number];
+type SlideFoto = { variant: "image"; foto: BannerFoto };
+type Slide = SlidePadrao | SlideFoto;
+
+/**
+ * As duas primeiras faixas são sempre as do site (logo e ilustração 3D).
+ * As duas últimas mostram a foto cadastrada no painel — e, se não houver
+ * foto, voltam para a faixa padrão em vez de deixar um buraco.
+ */
+function montarSlides(banners: BannerFoto[]): Slide[] {
+  const comFoto = (slot: number, padrao: SlidePadrao): Slide => {
+    const foto = banners.find((b) => b.slot === slot && b.image);
+    return foto ? { variant: "image", foto } : padrao;
+  };
+
+  return [SLIDES[0], SLIDES[1], comFoto(1, SLIDES[2]), comFoto(2, SLIDES[3])];
+}
+
+/** Faixa que é só a foto cadastrada no painel, ocupando a largura toda. */
+function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean }) {
+  const classes =
+    "relative w-full shrink-0 min-h-[320px] sm:min-h-[420px] lg:min-h-[480px]";
+
+  const conteudo = (
+    <>
+      <Image
+        src={foto.image}
+        alt={foto.alt ?? ""}
+        fill
+        sizes="100vw"
+        priority={prioridade}
+        // Foto vinda do painel é base64; não passa pelo otimizador do Next.
+        unoptimized={foto.image.startsWith("data:")}
+        className="object-cover"
+      />
+      {/* Escurecida no rodapé para as setas e os pontinhos não sumirem
+          numa foto clara. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-night/70 to-transparent"
+        aria-hidden="true"
+      />
+    </>
+  );
+
+  if (foto.link) {
+    return (
+      <Link href={foto.link} className={`${classes} block`}>
+        {conteudo}
+      </Link>
+    );
+  }
+
+  return <div className={classes}>{conteudo}</div>;
+}
+
 function renderTitle(title: string, highlight?: string) {
   if (!highlight) return title;
   const parts = title.split(highlight);
@@ -162,15 +225,25 @@ function renderTitle(title: string, highlight?: string) {
   );
 }
 
-export default function BannerCarousel() {
+export default function BannerCarousel({
+  banners = [],
+}: {
+  banners?: BannerFoto[];
+}) {
+  const slides = montarSlides(banners);
+  const total = slides.length;
+
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const touchStartX = useRef<number | null>(null);
 
-  const goTo = useCallback((i: number) => {
-    setIndex(((i % SLIDES.length) + SLIDES.length) % SLIDES.length);
-  }, []);
+  const goTo = useCallback(
+    (i: number) => {
+      setIndex(((i % total) + total) % total);
+    },
+    [total]
+  );
 
   const next = useCallback(() => goTo(index + 1), [goTo, index]);
   const prev = useCallback(() => goTo(index - 1), [goTo, index]);
@@ -196,8 +269,6 @@ export default function BannerCarousel() {
     touchStartX.current = null;
   }
 
-  const slide = SLIDES[index];
-
   return (
     <div
       className="hero-night relative overflow-hidden"
@@ -214,7 +285,10 @@ export default function BannerCarousel() {
         className="flex transition-transform duration-700 ease-out"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
-        {SLIDES.map((s, i) => (
+        {slides.map((s, i) =>
+          s.variant === "image" ? (
+            <FotoSlide key={i} foto={s.foto} prioridade={i === 0} />
+          ) : (
           <div
             key={i}
             className="flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24"
@@ -298,7 +372,8 @@ export default function BannerCarousel() {
               </div>
             )}
           </div>
-        ))}
+          )
+        )}
       </div>
 
       {/* Setas — visíveis também no celular, tamanho maior pra ser fácil de tocar */}
@@ -323,7 +398,7 @@ export default function BannerCarousel() {
 
       {/* Pontos — área de toque ampliada (padding invisível) pra facilitar no celular */}
       <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1 sm:bottom-5">
-        {SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}

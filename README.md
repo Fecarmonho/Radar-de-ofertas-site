@@ -61,6 +61,14 @@ partir de". Se você preferir mostrar a faixa inteira, digite-a no campo
 de preço: o sistema reconhece o formato e a atualização automática passa
 longe daquele produto, preservando o que você escreveu.
 
+## Carrossel da home
+
+São quatro faixas. As duas primeiras são fixas no código (a da logo e a
+da ilustração 3D, em `components/BannerCarousel.tsx`); as duas últimas
+são espaços de foto que você troca em `/admin/carrossel`, com link e
+descrição opcionais. Espaço vazio não deixa buraco: a faixa volta a
+mostrar o conteúdo padrão daquele lugar.
+
 ## Métricas
 
 `/admin/metricas` mostra visitas, cliques, taxa de clique, produtos mais

@@ -95,7 +95,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
           <span className="block text-[11px] font-medium uppercase tracking-wide text-ink/40">
             A partir de
           </span>
-          <span className="font-display text-3xl font-extrabold text-ink">
+          <span
+            className={`block whitespace-nowrap font-display font-extrabold text-ink ${
+              product.price.length > 12 ? "text-xl sm:text-2xl" : "text-3xl"
+            }`}
+          >
             {product.price}
           </span>
           {product.priceUpdatedAt && (

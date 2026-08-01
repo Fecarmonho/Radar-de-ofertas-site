@@ -40,6 +40,9 @@ export default async function AdminDashboardLayout({
               <Link href="/admin/secoes" className="transition-colors hover:text-ink">
                 Seções
               </Link>
+              <Link href="/admin/carrossel" className="transition-colors hover:text-ink">
+                Carrossel
+              </Link>
               <Link href="/admin/usuarios" className="transition-colors hover:text-ink">
                 Usuários
               </Link>

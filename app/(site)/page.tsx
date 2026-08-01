@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllProducts } from "@/lib/products-db";
 import { getAllSections } from "@/lib/sections-db";
+import { getBanners } from "@/lib/banners-db";
 import { Product } from "@/lib/affiliates";
 import ProductCard from "@/components/ProductCard";
 import BannerCarousel from "@/components/BannerCarousel";
@@ -46,7 +47,11 @@ const steps = [
 ];
 
 export default async function HomePage() {
-  const [products, sections] = await Promise.all([getAllProducts(), getAllSections()]);
+  const [products, sections, banners] = await Promise.all([
+    getAllProducts(),
+    getAllSections(),
+    getBanners(),
+  ]);
 
   const bySection = new Map<string, Product[]>();
   const semSecao: Product[] = [];
@@ -70,7 +75,7 @@ export default async function HomePage() {
   return (
     <main>
       {/* ── BANNER (topo absoluto da página) ─────────────────────── */}
-      <BannerCarousel />
+      <BannerCarousel banners={banners} />
 
       <MarqueeTicker />
 

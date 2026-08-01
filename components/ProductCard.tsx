@@ -24,6 +24,17 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+/**
+ * O card é estreito (dois por linha no celular). Um preço simples cabe
+ * grande; uma faixa de variação tem o dobro de caracteres e precisa de
+ * uma fonte menor para continuar numa linha só, sem empurrar o botão.
+ */
+function tamanhoDoPreco(price: string): string {
+  if (price.length > 20) return "text-[11px] sm:text-base";
+  if (price.length > 12) return "text-sm sm:text-lg";
+  return "text-lg sm:text-2xl";
+}
+
 export default function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-ink/8 bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
@@ -76,12 +87,18 @@ export default function ProductCard({ product }: { product: Product }) {
           {product.shortDescription}
         </p>
 
-        <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:pt-4">
-          <div className="leading-tight">
+        <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:pt-4">
+          <div className="min-w-0 leading-tight">
             <span className="block text-[9px] font-medium uppercase tracking-wide text-ink/40 sm:text-[11px]">
               A partir de
             </span>
-            <span className="font-display text-lg font-extrabold text-ink sm:text-2xl">
+            {/* Faixa de preço ("R$ 16,99 - R$ 48,99") é bem mais larga que um
+                preço simples: diminui a fonte em vez de quebrar no meio. */}
+            <span
+              className={`block whitespace-nowrap font-display font-extrabold text-ink ${tamanhoDoPreco(
+                product.price
+              )}`}
+            >
               {product.price}
             </span>
           </div>
@@ -89,7 +106,7 @@ export default function ProductCard({ product }: { product: Product }) {
             href={buildTrackedGoUrl(product.slug, "site")}
             target="_blank"
             rel="nofollow sponsored noopener"
-            className="btn-fire flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold text-white sm:px-5 sm:py-2.5 sm:text-sm"
+            className="btn-fire flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold text-white sm:px-5 sm:py-2.5 sm:text-sm"
           >
             Ver oferta
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
