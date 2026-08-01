@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-session";
 import { updateProduct, deleteProduct } from "@/lib/products-db";
-import { Product, isAllowedAffiliateUrl } from "@/lib/affiliates";
+import { Product, isAllowedAffiliateUrl, parsePriceBRL } from "@/lib/affiliates";
 
 export async function PUT(
   request: NextRequest,
@@ -29,7 +29,12 @@ export async function PUT(
   }
 
   try {
-    await updateProduct(params.slug, { ...product, network: "shopee" });
+    await updateProduct(params.slug, {
+      ...product,
+      network: "shopee",
+      priceValue: parsePriceBRL(product.price),
+      priceUpdatedAt: new Date().toISOString(),
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PageViewTracker from "@/components/PageViewTracker";
 
 export default function SiteLayout({
   children,
@@ -8,6 +9,7 @@ export default function SiteLayout({
 }) {
   return (
     <>
+      <PageViewTracker />
       <SiteHeader />
       {children}
       <SiteFooter />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllProducts } from "@/lib/products-db";
 import DeleteProductButton from "@/components/admin/DeleteProductButton";
+import RefreshPricesButton from "@/components/admin/RefreshPricesButton";
 
 export const dynamic = "force-dynamic";
 
@@ -11,12 +12,15 @@ export default async function AdminHomePage() {
     <div>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-display text-2xl font-bold text-ink">Produtos</h1>
-        <Link
-          href="/admin/produtos/novo"
-          className="btn-fire rounded-full px-5 py-2.5 text-center text-sm font-bold text-white"
-        >
-          + Adicionar produto
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <RefreshPricesButton />
+          <Link
+            href="/admin/produtos/novo"
+            className="btn-fire rounded-full px-5 py-2.5 text-center text-sm font-bold text-white"
+          >
+            + Adicionar produto
+          </Link>
+        </div>
       </div>
 
       {products.length === 0 ? (
@@ -65,7 +69,16 @@ export default async function AdminHomePage() {
                   <tr key={product.slug} className="border-b border-ink/5 last:border-0">
                     <td className="px-4 py-3 font-medium text-ink">{product.title}</td>
                     <td className="px-4 py-3 text-ink/60">{product.category}</td>
-                    <td className="px-4 py-3 text-ink/60">{product.price}</td>
+                    <td className="px-4 py-3 text-ink/60">
+                      {product.price}
+                      <span className="mt-0.5 block text-xs text-ink/35">
+                        {product.priceAutoUpdate === false
+                          ? "fixo (não atualiza sozinho)"
+                          : product.priceUpdatedAt
+                            ? `conferido em ${new Date(product.priceUpdatedAt).toLocaleDateString("pt-BR")}`
+                            : "ainda não conferido"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-3">
                         <Link

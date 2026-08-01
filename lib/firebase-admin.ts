@@ -34,3 +34,8 @@ function initAdmin() {
 const adminApp = initAdmin();
 export const adminAuth = getAuth(adminApp);
 export const adminDb = getFirestore(adminApp);
+
+// Campos opcionais que chegam como `undefined` (produto sem marca, sem
+// nota etc.) são simplesmente ignorados na gravação em vez de derrubar a
+// requisição inteira com erro.
+adminDb.settings({ ignoreUndefinedProperties: true });

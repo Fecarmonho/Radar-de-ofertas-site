@@ -34,6 +34,9 @@ export default async function AdminDashboardLayout({
               <Link href="/admin" className="transition-colors hover:text-ink">
                 Produtos
               </Link>
+              <Link href="/admin/metricas" className="transition-colors hover:text-ink">
+                Métricas
+              </Link>
               <Link href="/admin/secoes" className="transition-colors hover:text-ink">
                 Seções
               </Link>

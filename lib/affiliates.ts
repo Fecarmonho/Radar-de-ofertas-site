@@ -21,7 +21,14 @@ export interface Product {
   title: string;
   shortDescription: string;
   image: string;
+  /** Preço formatado para exibição, ex: "R$ 129,90" */
   price: string;
+  /** O mesmo preço como número — usado para comparar entre atualizações */
+  priceValue?: number;
+  /** Quando o preço foi conferido na Shopee pela última vez (ISO) */
+  priceUpdatedAt?: string;
+  /** Se false, a atualização automática diária não mexe nesse preço */
+  priceAutoUpdate?: boolean;
   category: string;
   network: Network;
   /** ID/URL do produto na rede de origem, sem os parâmetros de afiliado */
@@ -101,6 +108,26 @@ export function isAllowedAffiliateUrl(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Lê "R$ 1.299,90" (ou "1299.90", ou "1.299,90") como número.
+ * Serve para guardar o preço digitado à mão também como valor numérico,
+ * que é o que a atualização automática compara.
+ */
+export function parsePriceBRL(text: string): number | undefined {
+  if (!text) return undefined;
+
+  let digits = text.replace(/[^\d.,]/g, "");
+  if (!digits) return undefined;
+
+  // Formato brasileiro: ponto é separador de milhar, vírgula é decimal.
+  if (digits.includes(",")) {
+    digits = digits.replace(/\./g, "").replace(",", ".");
+  }
+
+  const value = Number(digits);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
 /** URL interna que o botão de compra deve usar — nunca o link de afiliado direto. */

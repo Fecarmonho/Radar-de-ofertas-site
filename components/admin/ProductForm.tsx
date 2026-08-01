@@ -49,9 +49,83 @@ export default function ProductForm({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const [avisoBusca, setAvisoBusca] = useState<string | null>(null);
 
   function update<K extends keyof Product>(key: K, value: Product[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  /**
+   * Abre o link de afiliado no servidor e traz o que a Shopee publica na
+   * página do produto: nome, foto, descrição, preço, nota e número de
+   * avaliações. O que vier em branco continua sendo preenchido na mão.
+   */
+  async function buscarDadosDoLink() {
+    const url = form.networkProductId.trim();
+    if (!url) {
+      setAvisoBusca("Cole o link de afiliado primeiro.");
+      return;
+    }
+
+    setBuscando(true);
+    setAvisoBusca(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/scrape-shopee", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAvisoBusca(data.error ?? "Não consegui ler esse link.");
+        return;
+      }
+
+      const preenchidos: string[] = [];
+      setForm((prev) => {
+        const next = { ...prev };
+        if (data.title) {
+          next.title = data.title;
+          if (!isEditing) next.slug = slugify(data.title);
+          preenchidos.push("nome");
+        }
+        if (data.image) {
+          next.image = data.image;
+          preenchidos.push("foto");
+        }
+        if (data.description && !prev.shortDescription) {
+          next.shortDescription = data.description;
+          preenchidos.push("descrição");
+        }
+        if (data.price) {
+          next.price = data.price;
+          preenchidos.push("preço");
+        }
+        if (typeof data.rating === "number") {
+          next.rating = data.rating;
+          preenchidos.push("nota");
+        }
+        if (typeof data.reviewCount === "number") {
+          next.reviewCount = data.reviewCount;
+          preenchidos.push("avaliações");
+        }
+        return next;
+      });
+
+      setAvisoBusca(
+        preenchidos.length > 0
+          ? `Preenchi ${preenchidos.join(", ")}. Confira e ajuste o que quiser.`
+          : "O link abriu, mas não achei os dados. Preencha na mão."
+      );
+    } catch {
+      setAvisoBusca("Não consegui acessar o link agora. Preencha na mão.");
+    } finally {
+      setBuscando(false);
+    }
   }
 
   function handleTitleChange(value: string) {
@@ -142,18 +216,35 @@ export default function ProductForm({
       <div>
         <label className="block text-sm font-medium text-ink/80">
           Link de afiliado da Shopee
-          <input
-            required
-            value={form.networkProductId}
-            onChange={(e) => update("networkProductId", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 font-mono text-sm focus:border-accent focus:outline-none"
-            placeholder="https://s.shopee.com.br/AbCd123"
-          />
+          <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+            <input
+              required
+              value={form.networkProductId}
+              onChange={(e) => update("networkProductId", e.target.value)}
+              className="w-full rounded-lg border border-ink/15 px-3 py-2 font-mono text-sm focus:border-accent focus:outline-none"
+              placeholder="https://s.shopee.com.br/AbCd123"
+            />
+            <button
+              type="button"
+              onClick={buscarDadosDoLink}
+              disabled={buscando || !form.networkProductId.trim()}
+              className="whitespace-nowrap rounded-lg border border-signal/40 bg-signal/10 px-4 py-2 text-sm font-bold text-signal transition-colors hover:bg-signal/20 disabled:opacity-50"
+            >
+              {buscando ? "Buscando..." : "Buscar dados"}
+            </button>
+          </div>
         </label>
         <p className="mt-1 text-xs text-ink/40">
           Gerado no painel affiliate.shopee.com.br → botão "Obter link". É esse
           link que leva o cliente até a Shopee quando ele clica em "Ver oferta".
+          Clique em "Buscar dados" para preencher nome, foto, descrição, preço e
+          nota automaticamente.
         </p>
+        {avisoBusca && (
+          <p className="mt-2 rounded-lg bg-paper px-3 py-2 text-xs font-medium text-ink/70">
+            {avisoBusca}
+          </p>
+        )}
       </div>
 
       <div>
@@ -212,16 +303,39 @@ export default function ProductForm({
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <label className="block text-sm font-medium text-ink/80">
-          Preço
-          <input
-            required
-            value={form.price}
-            onChange={(e) => update("price", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
-            placeholder="R$ 129,90"
-          />
-        </label>
+        <div>
+          <label className="block text-sm font-medium text-ink/80">
+            Preço
+            <input
+              required
+              value={form.price}
+              onChange={(e) => update("price", e.target.value)}
+              className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
+              placeholder="R$ 129,90"
+            />
+          </label>
+          <label className="mt-2 flex items-start gap-2 text-xs text-ink/60">
+            <input
+              type="checkbox"
+              checked={form.priceAutoUpdate !== false}
+              onChange={(e) => update("priceAutoUpdate", e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Conferir o preço na Shopee todo dia e atualizar sozinho.
+              Desmarque se quiser deixar esse valor fixo.
+            </span>
+          </label>
+          {form.priceUpdatedAt && (
+            <p className="mt-1 text-xs text-ink/40">
+              Última conferida:{" "}
+              {new Date(form.priceUpdatedAt).toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })}
+            </p>
+          )}
+        </div>
 
         <label className="block text-sm font-medium text-ink/80">
           Categoria

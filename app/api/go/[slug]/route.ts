@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProductBySlug } from "@/lib/products-db";
 import { buildAffiliateUrl, isAllowedAffiliateUrl } from "@/lib/affiliates";
+import { recordClick } from "@/lib/stats-db";
 
 /**
  * GET /api/go/:slug?src=ads|organic|...
@@ -10,8 +11,9 @@ import { buildAffiliateUrl, isAllowedAffiliateUrl } from "@/lib/affiliates";
  *    então não é bloqueado por ad-blockers e não perde dado no iOS).
  * 3. Redireciona (302) para o link de afiliado real.
  *
- * Trocar console.log por uma escrita real (Supabase, Postgres, planilha,
- * ou até um POST para o GA4 Measurement Protocol) quando for para produção.
+ * A contagem vai para o documento do dia na coleção "stats" e aparece em
+ * /admin/metricas; se o GA4 estiver configurado, o mesmo clique também é
+ * enviado para lá, pra cruzar com as campanhas do Google Ads.
  */
 export async function GET(
   request: NextRequest,
@@ -58,9 +60,15 @@ interface ClickEvent {
 }
 
 async function logClick(event: ClickEvent) {
-  // MVP: loga no console (aparece nos logs da Vercel).
-  // Produção: grave em um banco (Supabase/Postgres) ou envie para o GA4
-  // via Measurement Protocol para cruzar com dados de campanha do Google Ads.
+  // Contador do dia no Firestore — é o que alimenta /admin/metricas.
+  try {
+    await recordClick({ slug: event.slug, source: event.source });
+  } catch (err) {
+    // Se a contagem falhar, o visitante ainda tem que chegar na Shopee.
+    console.error("[click] falha ao registrar clique", err);
+  }
+
+  // Continua no log da Vercel também, útil pra investigar caso a caso.
   console.log("[click]", JSON.stringify(event));
 
   const ga4Secret = process.env.GA4_API_SECRET;

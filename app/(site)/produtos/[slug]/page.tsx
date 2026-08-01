@@ -98,6 +98,17 @@ export default async function ProductPage({ params }: { params: { slug: string }
           <span className="font-display text-3xl font-extrabold text-ink">
             {product.price}
           </span>
+          {product.priceUpdatedAt && (
+            <span className="mt-1 block text-[11px] text-ink/40">
+              Preço conferido em{" "}
+              {new Date(product.priceUpdatedAt).toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}{" "}
+              · confirme o valor final na Shopee
+            </span>
+          )}
         </div>
         <a
           href={buildTrackedGoUrl(product.slug, "site")}

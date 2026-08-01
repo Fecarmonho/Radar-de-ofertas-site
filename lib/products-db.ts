@@ -60,6 +60,25 @@ export async function updateProduct(
   await adminDb.collection(COLLECTION).doc(currentSlug).set(product);
 }
 
+/**
+ * Grava só os campos de preço, sem tocar no resto do produto — é o que a
+ * atualização automática diária usa.
+ */
+export async function updateProductPrice(
+  slug: string,
+  price: { price: string; priceValue: number; priceUpdatedAt: string }
+): Promise<void> {
+  await adminDb.collection(COLLECTION).doc(slug).update(price);
+}
+
+/** Marca que o preço foi conferido, mesmo quando o valor não mudou. */
+export async function touchPriceCheckedAt(
+  slug: string,
+  checkedAt: string
+): Promise<void> {
+  await adminDb.collection(COLLECTION).doc(slug).update({ priceUpdatedAt: checkedAt });
+}
+
 export async function deleteProduct(slug: string): Promise<void> {
   await adminDb.collection(COLLECTION).doc(slug).delete();
 }

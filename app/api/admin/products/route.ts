@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-session";
 import { createProduct } from "@/lib/products-db";
-import { Product, isAllowedAffiliateUrl } from "@/lib/affiliates";
+import { Product, isAllowedAffiliateUrl, parsePriceBRL } from "@/lib/affiliates";
 
 export async function POST(request: NextRequest) {
   const session = await getAdminSession();
@@ -26,7 +26,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await createProduct({ ...product, network: "shopee" });
+    await createProduct({
+      ...product,
+      network: "shopee",
+      // Guarda o preço também como número, que é o que a atualização
+      // automática usa para saber se mudou.
+      priceValue: parsePriceBRL(product.price),
+      priceUpdatedAt: new Date().toISOString(),
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json(
