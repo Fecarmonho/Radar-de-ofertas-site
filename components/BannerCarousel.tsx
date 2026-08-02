@@ -198,9 +198,13 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
   // este tem largura definida — no <img> ela seria ambígua).
   // No celular a foto avança sobre as bordas da faixa (margem negativa),
   // ganhando largura sem mexer no alinhamento do texto.
-  const molduraClasses = `relative -mx-3 flex w-[calc(100%+1.5rem)] justify-center sm:mx-0 sm:w-auto sm:shrink-0 ${
-    temTexto ? "sm:max-w-[52%]" : "sm:max-w-[92%]"
-  }`;
+  //
+  // Do tablet pra cima ela usa flex-1 em vez de uma largura fixa: assim
+  // ocupa todo o espaço que sobra ao lado do texto, em vez de deixar um
+  // vão morto no meio da faixa em telas largas. Quem segura o tamanho
+  // passa a ser o teto de altura.
+  const molduraClasses =
+    "relative -mx-3 flex w-[calc(100%+1.5rem)] justify-center sm:mx-0 sm:w-auto sm:min-w-0 sm:flex-1";
 
   const imagem = (
     <Image
@@ -217,8 +221,8 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
       // deitada cresce até a borda, foto em pé para na altura da faixa.
       className={`h-auto w-auto max-w-full rounded-2xl object-contain shadow-glow ring-1 ring-white/15 ${
         temTexto
-          ? "max-h-[46vh] sm:max-h-[400px] lg:max-h-[460px]"
-          : "max-h-[56vh] sm:max-h-[440px] lg:max-h-[520px]"
+          ? "max-h-[46vh] sm:max-h-[420px] lg:max-h-[520px]"
+          : "max-h-[56vh] sm:max-h-[460px] lg:max-h-[560px]"
       }`}
     />
   );
