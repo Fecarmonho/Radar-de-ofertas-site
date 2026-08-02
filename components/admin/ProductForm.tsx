@@ -78,10 +78,15 @@ export default function ProductForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      const data = await response.json();
+      // Um erro de infraestrutura (tempo esgotado, por exemplo) não volta
+      // em JSON: nesse caso mostramos o código, que diz o que houve.
+      const data = await response.json().catch(() => null);
 
-      if (!response.ok) {
-        setAvisoBusca(data.error ?? "Não consegui ler esse link.");
+      if (!response.ok || !data) {
+        setAvisoBusca(
+          data?.error ??
+            `A busca falhou (código ${response.status}). Preencha os campos na mão.`
+        );
         return;
       }
 

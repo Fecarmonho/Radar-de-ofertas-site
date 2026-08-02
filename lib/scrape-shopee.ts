@@ -22,7 +22,12 @@ const UA_CRAWLER =
 const UA_BROWSER =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
-const TIMEOUT_MS = 12_000;
+/**
+ * Curto de propósito: a rota tem tempo limitado na Vercel e faz até três
+ * requisições em sequência. Melhor desistir de uma que travou do que
+ * derrubar a chamada inteira por estouro de tempo.
+ */
+const TIMEOUT_MS = 7_000;
 
 export interface ScrapedProduct {
   title?: string;
@@ -36,15 +41,31 @@ export interface ScrapedProduct {
   reviewCount?: number;
   /** Endereço final da página do produto (o link curto já resolvido) */
   canonicalUrl?: string;
+  /**
+   * O que aconteceu na conversa com a Shopee. Serve para a mensagem de
+   * erro dizer se ela bloqueou, se demorou, ou se respondeu sem os dados
+   * — sem isso, qualquer falha vira o mesmo "não consegui ler o link".
+   */
+  diagnostico?: Diagnostico;
 }
 
-interface FetchedPage {
-  url: string;
-  html: string;
+export interface Diagnostico {
+  urlResolvida: string;
+  /** Último código HTTP que a Shopee devolveu (0 = nem respondeu) */
   status: number;
+  /** true quando o link curto não chegou a virar página de produto */
+  naoResolveu: boolean;
+  /** true quando alguma requisição estourou o tempo */
+  demorou: boolean;
 }
 
-async function fetchPage(url: string, userAgent: string): Promise<FetchedPage | null> {
+// `demorou` existe nos dois casos de propósito: assim quem lê o
+// resultado não depende de estreitamento de tipo para consultá-lo.
+type ResultadoFetch =
+  | { ok: true; url: string; html: string; status: number; demorou: false }
+  | { ok: false; status: number; demorou: boolean };
+
+async function fetchPage(url: string, userAgent: string): Promise<ResultadoFetch> {
   try {
     const response = await fetch(url, {
       redirect: "follow",
@@ -52,9 +73,18 @@ async function fetchPage(url: string, userAgent: string): Promise<FetchedPage | 
       signal: AbortSignal.timeout(TIMEOUT_MS),
       cache: "no-store",
     });
-    return { url: response.url, html: await response.text(), status: response.status };
-  } catch {
-    return null;
+    return {
+      ok: true,
+      url: response.url,
+      html: await response.text(),
+      status: response.status,
+      demorou: false,
+    };
+  } catch (err) {
+    // Estouro de tempo e recusa de conexão precisam ser distinguidos:
+    // um vira "a Shopee demorou", o outro "a Shopee bloqueou".
+    const nome = err instanceof Error ? err.name : "";
+    return { ok: false, status: 0, demorou: nome === "TimeoutError" || nome === "AbortError" };
   }
 }
 
@@ -72,17 +102,25 @@ export function parseShopeeIds(url: string): { shopId: string; itemId: string } 
  * Segue um link curto de afiliado até a página real do produto.
  * Devolve a própria URL se ela já for uma página de produto.
  */
-export async function resolveShopeeUrl(url: string): Promise<string> {
+export async function resolveShopeeUrl(
+  url: string
+): Promise<{ url: string; status: number; demorou: boolean }> {
   let current = url;
+  let status = 0;
+  let demorou = false;
 
-  for (let hop = 0; hop < 4; hop++) {
-    if (parseShopeeIds(current)) return current;
+  for (let hop = 0; hop < 3; hop++) {
+    if (parseShopeeIds(current)) return { url: current, status, demorou };
 
     const page = await fetchPage(current, UA_BROWSER);
-    if (!page) break;
+    if (!page.ok) {
+      demorou = demorou || page.demorou;
+      break;
+    }
+    status = page.status;
 
     // Redirecionamento HTTP normal já resolvido pelo fetch
-    if (parseShopeeIds(page.url)) return page.url;
+    if (parseShopeeIds(page.url)) return { url: page.url, status, demorou };
 
     const next = findRedirect(page.html, page.url);
     if (!next || next === current) {
@@ -92,7 +130,7 @@ export async function resolveShopeeUrl(url: string): Promise<string> {
     current = next;
   }
 
-  return current;
+  return { url: current, status, demorou };
 }
 
 /**
@@ -142,21 +180,36 @@ function extractProductJsonLd(html: string): Record<string, any> | null {
 }
 
 export async function scrapeShopeeProduct(url: string): Promise<ScrapedProduct> {
-  const resolved = await resolveShopeeUrl(url);
-  const ids = parseShopeeIds(resolved);
+  const resolvido = await resolveShopeeUrl(url);
+  const ids = parseShopeeIds(resolvido.url);
+
+  const diagnostico: Diagnostico = {
+    urlResolvida: resolvido.url,
+    status: resolvido.status,
+    naoResolveu: !ids,
+    demorou: resolvido.demorou,
+  };
 
   // A página final é lida como crawler (é assim que as tags aparecem).
-  let page = await fetchPage(resolved, UA_CRAWLER);
+  let page = await fetchPage(resolvido.url, UA_CRAWLER);
+  if (page.ok) diagnostico.status = page.status;
+  else diagnostico.demorou = diagnostico.demorou || page.demorou;
 
   // Se ela recusar o crawler, tenta o formato canônico /product/loja/item,
   // que responde com o JSON-LD mesmo quando o endereço "bonito" falha.
-  if ((!page || page.status !== 200 || !hasUsefulData(page.html)) && ids) {
+  if (ids && (!page.ok || page.status !== 200 || !hasUsefulData(page.html))) {
     const canonical = `https://shopee.com.br/product/${ids.shopId}/${ids.itemId}`;
-    page = (await fetchPage(canonical, UA_CRAWLER)) ?? page;
+    const retry = await fetchPage(canonical, UA_CRAWLER);
+    if (retry.ok) {
+      page = retry;
+      diagnostico.status = retry.status;
+    } else {
+      diagnostico.demorou = diagnostico.demorou || retry.demorou;
+    }
   }
 
-  if (!page) {
-    throw new Error("Não foi possível acessar o link.");
+  if (!page.ok) {
+    return { diagnostico };
   }
 
   const jsonLd = extractProductJsonLd(page.html);
@@ -164,14 +217,15 @@ export async function scrapeShopeeProduct(url: string): Promise<ScrapedProduct> 
   const rating = readRating(jsonLd);
 
   return {
-    title: readTitle(page.html, jsonLd) ?? titleFromUrl(resolved),
+    title: readTitle(page.html, jsonLd) ?? titleFromUrl(resolvido.url),
     image: matchMetaContent(page.html, "og:image") ?? firstImage(jsonLd),
     description: readDescription(page.html, jsonLd),
     price: price ? formatBRL(price) : undefined,
     priceValue: price,
     rating: rating?.value,
     reviewCount: rating?.count,
-    canonicalUrl: resolved,
+    canonicalUrl: resolvido.url,
+    diagnostico,
   };
 }
 
@@ -184,14 +238,14 @@ export async function scrapeShopeeProduct(url: string): Promise<ScrapedProduct> 
  * vindo de um produto sugerido na lateral da página.
  */
 export async function fetchShopeePrice(url: string): Promise<number | undefined> {
-  const resolved = await resolveShopeeUrl(url);
-  const ids = parseShopeeIds(resolved);
+  const resolvido = await resolveShopeeUrl(url);
+  const ids = parseShopeeIds(resolvido.url);
   const target = ids
     ? `https://shopee.com.br/product/${ids.shopId}/${ids.itemId}`
-    : resolved;
+    : resolvido.url;
 
   const page = await fetchPage(target, UA_CRAWLER);
-  if (!page || page.status !== 200) return undefined;
+  if (!page.ok || page.status !== 200) return undefined;
 
   return readPrice(extractProductJsonLd(page.html), "");
 }
