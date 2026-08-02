@@ -183,16 +183,11 @@ function montarSlides(banners: BannerFoto[]): Slide[] {
  * Faixa com a foto cadastrada no painel, no mesmo formato das outras:
  * texto de um lado, imagem do outro.
  *
- * Dois cuidados aqui, aprendidos na prática:
- *
- * 1. A moldura da foto não tem proporção fixa — ela abraça a imagem, que
- *    só tem limite de altura e largura. Uma foto em pé (o caso comum de
- *    quem fotografa do celular) numa moldura deitada ficaria minúscula
- *    no meio de um vazio enorme, principalmente no computador.
- *
- * 2. O fundo da faixa é a própria foto ampliada e desfocada. Assim o
- *    espaço que sobra ao redor vira parte do visual em vez de buraco
- *    preto — o mesmo tratamento que o carrossel de produtos já usa.
+ * A moldura não tem proporção fixa: ela abraça a imagem, que só tem
+ * teto de altura. Assim a foto cresce até onde o espaço permitir —
+ * deitada vai até a borda, em pé para na altura da faixa — sem nunca
+ * deformar. O fundo é o mesmo quadriculado escuro das outras faixas,
+ * herdado do carrossel, para as quatro combinarem.
  */
 function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean }) {
   const temTexto = Boolean(foto.title || foto.description);
@@ -201,8 +196,10 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
   // No celular a foto ocupa a largura toda; a partir do tablet ela divide
   // a faixa com o texto (a porcentagem fica aqui, no contêiner, porque
   // este tem largura definida — no <img> ela seria ambígua).
-  const molduraClasses = `relative flex w-full justify-center sm:w-auto sm:shrink-0 ${
-    temTexto ? "sm:max-w-[48%]" : "sm:max-w-[78%]"
+  // No celular a foto avança sobre as bordas da faixa (margem negativa),
+  // ganhando largura sem mexer no alinhamento do texto.
+  const molduraClasses = `relative -mx-3 flex w-[calc(100%+1.5rem)] justify-center sm:mx-0 sm:w-auto sm:shrink-0 ${
+    temTexto ? "sm:max-w-[52%]" : "sm:max-w-[92%]"
   }`;
 
   const imagem = (
@@ -220,37 +217,26 @@ function FotoSlide({ foto, prioridade }: { foto: BannerFoto; prioridade: boolean
       // deitada cresce até a borda, foto em pé para na altura da faixa.
       className={`h-auto w-auto max-w-full rounded-2xl object-contain shadow-glow ring-1 ring-white/15 ${
         temTexto
-          ? "max-h-[38vh] sm:max-h-[340px] lg:max-h-[420px]"
-          : "max-h-[50vh] sm:max-h-[400px] lg:max-h-[460px]"
+          ? "max-h-[46vh] sm:max-h-[400px] lg:max-h-[460px]"
+          : "max-h-[56vh] sm:max-h-[440px] lg:max-h-[520px]"
       }`}
     />
   );
 
   return (
     <div
+      // Mesmo espaçamento das outras faixas, para o texto não dançar de
+      // lugar quando o carrossel troca de slide.
       className={`relative flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24 ${
         // Sem texto a foto é o único conteúdo: precisa ficar centralizada,
         // senão "justify-between" a joga para o canto esquerdo.
         temTexto ? "sm:justify-between" : "sm:justify-center"
       }`}
     >
-      {/* Fundo: a mesma foto, ampliada e desfocada, preenchendo a faixa */}
-      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-        <Image
-          src={foto.image}
-          alt=""
-          fill
-          sizes="100vw"
-          unoptimized={semOtimizador}
-          className="scale-125 object-cover opacity-40 blur-2xl"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-night/85 via-night/70 to-night/90 sm:bg-gradient-to-r sm:from-night sm:via-night/80 sm:to-night/40" />
-      </div>
-
       {temTexto && (
         <div className="relative max-w-lg text-center text-white sm:text-left">
           {foto.title && (
-            <h2 className="whitespace-pre-line font-display text-2xl font-extrabold leading-tight drop-shadow sm:text-4xl lg:text-5xl">
+            <h2 className="whitespace-pre-line font-display text-2xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
               {foto.title}
             </h2>
           )}
