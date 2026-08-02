@@ -88,9 +88,24 @@ async function fetchPage(url: string, userAgent: string): Promise<ResultadoFetch
   }
 }
 
-/** Tira o par (loja, item) de qualquer formato de URL de produto da Shopee. */
+/**
+ * Tira o par (loja, item) de qualquer formato de URL de produto da Shopee.
+ *
+ * São três formatos em uso, e o terceiro é justamente para onde os links
+ * curtos de afiliado redirecionam hoje:
+ *
+ *   /Nome-Do-Produto-i.1367299138.22893392542
+ *   /product/1367299138/22893392542
+ *   /nomedaloja/1367299138/22893392542?__mobile__=1
+ */
 export function parseShopeeIds(url: string): { shopId: string; itemId: string } | null {
-  const patterns = [/-i\.(\d+)\.(\d+)/, /\/product\/(\d+)\/(\d+)/];
+  const patterns = [
+    /-i\.(\d+)\.(\d+)/,
+    /\/product\/(\d+)\/(\d+)/,
+    // Qualquer /alguma-coisa/<numero longo>/<numero longo> — os ids da
+    // Shopee têm muitos dígitos, o que evita casar com paginação e afins.
+    /\/[^/?#]+\/(\d{6,})\/(\d{6,})(?:[/?#]|$)/,
+  ];
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match) return { shopId: match[1], itemId: match[2] };
@@ -179,6 +194,16 @@ function extractProductJsonLd(html: string): Record<string, any> | null {
   return null;
 }
 
+/** Os campos que dá para tirar de uma página, antes de formatar. */
+interface DadosParciais {
+  title?: string;
+  image?: string;
+  description?: string;
+  priceValue?: number;
+  rating?: number;
+  reviewCount?: number;
+}
+
 export async function scrapeShopeeProduct(url: string): Promise<ScrapedProduct> {
   const resolvido = await resolveShopeeUrl(url);
   const ids = parseShopeeIds(resolvido.url);
@@ -190,42 +215,66 @@ export async function scrapeShopeeProduct(url: string): Promise<ScrapedProduct> 
     demorou: resolvido.demorou,
   };
 
-  // A página final é lida como crawler (é assim que as tags aparecem).
-  let page = await fetchPage(resolvido.url, UA_CRAWLER);
-  if (page.ok) diagnostico.status = page.status;
-  else diagnostico.demorou = diagnostico.demorou || page.demorou;
-
-  // Se ela recusar o crawler, tenta o formato canônico /product/loja/item,
-  // que responde com o JSON-LD mesmo quando o endereço "bonito" falha.
-  if (ids && (!page.ok || page.status !== 200 || !hasUsefulData(page.html))) {
-    const canonical = `https://shopee.com.br/product/${ids.shopId}/${ids.itemId}`;
-    const retry = await fetchPage(canonical, UA_CRAWLER);
-    if (retry.ok) {
-      page = retry;
-      diagnostico.status = retry.status;
-    } else {
-      diagnostico.demorou = diagnostico.demorou || retry.demorou;
-    }
+  // A Shopee é irregular: às vezes o endereço com os parâmetros de
+  // rastreio traz as tags Open Graph e nenhum dado estruturado, às vezes
+  // o endereço canônico traz o contrário. Então tentamos os dois e
+  // juntamos o que cada um deu, em vez de apostar num só.
+  const tentativas = [resolvido.url];
+  if (ids) {
+    const canonica = `https://shopee.com.br/product/${ids.shopId}/${ids.itemId}`;
+    if (canonica !== resolvido.url) tentativas.push(canonica);
   }
+
+  let dados: DadosParciais = {};
+  for (const alvo of tentativas) {
+    dados = mesclar(dados, await lerPagina(alvo, diagnostico));
+    if (dados.title && dados.image && dados.priceValue !== undefined) break;
+  }
+
+  if (!dados.title) dados.title = titleFromUrl(resolvido.url);
+
+  return {
+    ...dados,
+    price: dados.priceValue !== undefined ? formatBRL(dados.priceValue) : undefined,
+    canonicalUrl: resolvido.url,
+    diagnostico,
+  };
+}
+
+/** Baixa uma página e tira dela tudo que der, anotando o que aconteceu. */
+async function lerPagina(url: string, diagnostico: Diagnostico): Promise<DadosParciais> {
+  const page = await fetchPage(url, UA_CRAWLER);
 
   if (!page.ok) {
-    return { diagnostico };
+    diagnostico.demorou = diagnostico.demorou || page.demorou;
+    return {};
   }
 
+  diagnostico.status = page.status;
+  if (page.status !== 200) return {};
+
   const jsonLd = extractProductJsonLd(page.html);
-  const price = readPrice(jsonLd, page.html);
   const rating = readRating(jsonLd);
 
   return {
-    title: readTitle(page.html, jsonLd) ?? titleFromUrl(resolvido.url),
+    title: readTitle(page.html, jsonLd),
     image: matchMetaContent(page.html, "og:image") ?? firstImage(jsonLd),
     description: readDescription(page.html, jsonLd),
-    price: price ? formatBRL(price) : undefined,
-    priceValue: price,
+    priceValue: readPrice(jsonLd, page.html),
     rating: rating?.value,
     reviewCount: rating?.count,
-    canonicalUrl: resolvido.url,
-    diagnostico,
+  };
+}
+
+/** O primeiro que tiver o campo preenchido ganha. */
+function mesclar(a: DadosParciais, b: DadosParciais): DadosParciais {
+  return {
+    title: a.title ?? b.title,
+    image: a.image ?? b.image,
+    description: a.description ?? b.description,
+    priceValue: a.priceValue ?? b.priceValue,
+    rating: a.rating ?? b.rating,
+    reviewCount: a.reviewCount ?? b.reviewCount,
   };
 }
 
@@ -240,18 +289,20 @@ export async function scrapeShopeeProduct(url: string): Promise<ScrapedProduct> 
 export async function fetchShopeePrice(url: string): Promise<number | undefined> {
   const resolvido = await resolveShopeeUrl(url);
   const ids = parseShopeeIds(resolvido.url);
-  const target = ids
-    ? `https://shopee.com.br/product/${ids.shopId}/${ids.itemId}`
-    : resolvido.url;
 
-  const page = await fetchPage(target, UA_CRAWLER);
-  if (!page.ok || page.status !== 200) return undefined;
+  const tentativas = ids
+    ? [`https://shopee.com.br/product/${ids.shopId}/${ids.itemId}`, resolvido.url]
+    : [resolvido.url];
 
-  return readPrice(extractProductJsonLd(page.html), "");
-}
+  for (const alvo of tentativas) {
+    const page = await fetchPage(alvo, UA_CRAWLER);
+    if (!page.ok || page.status !== 200) continue;
 
-function hasUsefulData(html: string): boolean {
-  return Boolean(matchMetaContent(html, "og:image")) || /"@type"\s*:\s*"Product"/.test(html);
+    const price = readPrice(extractProductJsonLd(page.html), "");
+    if (price !== undefined) return price;
+  }
+
+  return undefined;
 }
 
 function readTitle(html: string, jsonLd: Record<string, any> | null): string | undefined {

@@ -121,9 +121,18 @@ export default function ProductForm({
         return next;
       });
 
+      // A Shopee nem sempre publica tudo — dizer o que faltou evita a
+      // pessoa salvar achando que o preço veio junto.
+      const faltaram: string[] = [];
+      if (!data.price) faltaram.push("preço");
+      if (typeof data.rating !== "number") faltaram.push("nota");
+
       setAvisoBusca(
         preenchidos.length > 0
-          ? `Preenchi ${preenchidos.join(", ")}. Confira e ajuste o que quiser.`
+          ? `Preenchi ${preenchidos.join(", ")}.` +
+              (faltaram.length > 0
+                ? ` A Shopee não publicou ${faltaram.join(" nem ")} nessa página — preencha à mão.`
+                : " Confira e ajuste o que quiser.")
           : "O link abriu, mas não achei os dados. Preencha na mão."
       );
     } catch {
