@@ -189,12 +189,14 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
       {/* No computador a foto fica de um lado e as informações do outro, para
           preço e botão aparecerem sem precisar rolar. No celular tudo empilha
-          na ordem de sempre: foto, nome, preço. */}
+          na ordem de sempre: foto, nome, preço.
+          A foto NÃO acompanha a rolagem de propósito: ficava estranho ela
+          deslizando junto enquanto o texto passava do lado. */}
       <div className="mt-5 grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
         {/* A moldura acompanha a foto em vez de ter proporção fixa: foto de
             produto é quase sempre quadrada ou em pé, e a moldura 16:9 antiga
             deixava uma faixa branca enorme dos dois lados. */}
-        <div className="flex justify-center overflow-hidden rounded-2xl border border-ink/8 bg-gradient-to-br from-paper to-ink/5 p-3 shadow-card sm:p-5 lg:sticky lg:top-6">
+        <div className="flex justify-center overflow-hidden rounded-2xl border border-ink/8 bg-gradient-to-br from-paper to-ink/5 p-3 shadow-card sm:p-5">
           <Image
             src={urlDaFoto(product)}
             alt={product.title}
