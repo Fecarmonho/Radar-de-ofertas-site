@@ -29,21 +29,25 @@ export default async function AdminDashboardLayout({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-4 sm:gap-6">
-            <nav className="flex gap-5 text-sm font-semibold text-ink/60">
-              <Link href="/admin" className="transition-colors hover:text-ink">
+          <div className="flex min-w-0 items-center justify-between gap-4 sm:gap-6">
+            {/* No celular os cinco links não cabem lado a lado: a faixa rola
+                na horizontal. As margens negativas com padding fazem o
+                primeiro e o último item respirarem em vez de colarem na
+                borda da tela. A barra de rolagem fica escondida. */}
+            <nav className="-mx-4 flex gap-5 overflow-x-auto px-4 text-sm font-semibold text-ink/60 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:overflow-x-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
+              <Link href="/admin" className="shrink-0 transition-colors hover:text-ink">
                 Produtos
               </Link>
-              <Link href="/admin/metricas" className="transition-colors hover:text-ink">
+              <Link href="/admin/metricas" className="shrink-0 transition-colors hover:text-ink">
                 Métricas
               </Link>
-              <Link href="/admin/secoes" className="transition-colors hover:text-ink">
+              <Link href="/admin/secoes" className="shrink-0 transition-colors hover:text-ink">
                 Seções
               </Link>
-              <Link href="/admin/carrossel" className="transition-colors hover:text-ink">
+              <Link href="/admin/carrossel" className="shrink-0 transition-colors hover:text-ink">
                 Carrossel
               </Link>
-              <Link href="/admin/usuarios" className="transition-colors hover:text-ink">
+              <Link href="/admin/usuarios" className="shrink-0 transition-colors hover:text-ink">
                 Usuários
               </Link>
             </nav>

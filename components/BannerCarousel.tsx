@@ -397,8 +397,12 @@ export default function BannerCarousel({
           ) : (
           <div
             key={i}
-            className="flex w-full shrink-0 flex-col-reverse items-center justify-center gap-6 px-6 py-10 pb-14 sm:min-h-[420px] sm:flex-row sm:justify-between sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[480px] lg:px-24"
+            className="w-full shrink-0 px-6 py-10 pb-14 sm:min-h-[420px] sm:px-16 sm:py-16 sm:pb-16 lg:min-h-[520px] lg:px-24"
           >
+            {/* Em tela larga o conteúdo era jogado para os dois cantos, com um
+                vão morto no meio. Este limite de largura mantém texto e arte
+                próximos e centralizados; no celular nada muda. */}
+            <div className="mx-auto flex h-full w-full max-w-5xl flex-col-reverse items-center justify-center gap-6 sm:flex-row sm:justify-between sm:gap-10">
             <div className="max-w-lg text-center text-white sm:text-left">
               <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber">
                 <span className="h-2 w-2 animate-blink rounded-full bg-accent" />
@@ -444,14 +448,14 @@ export default function BannerCarousel({
                   width={260}
                   height={260}
                   priority={i === 0}
-                  className="relative w-[150px] rounded-full shadow-glow sm:w-[200px] lg:w-[240px]"
+                  className="relative w-[150px] rounded-full shadow-glow sm:w-[200px] lg:w-[300px] xl:w-[340px]"
                 />
               </div>
             ) : (
               /* Ícone principal + selinhos flutuantes + selo com a logo.
-                 No celular a ilustração ficava pequena demais perto do texto:
-                 sobe de 128px para 176px, sem mudar tablet e computador. */
-              <div className="relative h-44 w-44 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
+                 Tamanhos: 176px no celular (era 128px, pequeno demais perto
+                 do texto) e 320/360px no computador, onde sobrava espaço. */
+              <div className="relative h-44 w-44 shrink-0 sm:h-56 sm:w-56 lg:h-80 lg:w-80 xl:h-[360px] xl:w-[360px]">
                 <s.Illustration />
 
                 <FloatBadge className="left-0 top-1 sm:-left-3 sm:top-4" delay="0s" size={46}>
@@ -479,6 +483,7 @@ export default function BannerCarousel({
                 </div>
               </div>
             )}
+            </div>
           </div>
           )
         )}
