@@ -48,7 +48,9 @@ export default function OfertasBuscaveis({ fileiras }: { fileiras: Fileira[] }) 
   }, [fileiras, termo]);
 
   return (
-    <div id="ofertas" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16">
+    // Mais largo que o resto da página de propósito: com 1152px sobrava uma
+    // borda enorme dos dois lados no computador e cabiam só 3 por linha.
+    <div id="ofertas" className="mx-auto max-w-[1400px] scroll-mt-20 px-4 py-16 sm:px-6">
       <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-signal">
@@ -96,7 +98,7 @@ export default function OfertasBuscaveis({ fileiras }: { fileiras: Fileira[] }) 
               {encontrados.length}{" "}
               {encontrados.length === 1 ? "oferta encontrada" : "ofertas encontradas"}
             </p>
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
               {encontrados.map((produto) => (
                 <ProductCard key={produto.slug} product={produto} />
               ))}
@@ -130,7 +132,7 @@ export default function OfertasBuscaveis({ fileiras }: { fileiras: Fileira[] }) 
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
               {fileira.products.map((produto) => (
                 <ProductCard key={produto.slug} product={produto} />
               ))}

@@ -44,7 +44,7 @@ export default async function SecaoPage({ params }: { params: { slug: string } }
   const outras = secoes.filter((s) => s.slug !== secao.slug);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+    <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 sm:py-12">
       <nav aria-label="Você está em" className="flex items-center gap-1.5 text-xs text-ink/45">
         <Link href="/" className="hover:text-signal">
           Início
@@ -68,7 +68,7 @@ export default async function SecaoPage({ params }: { params: { slug: string } }
       </p>
 
       {produtos.length > 0 && (
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {produtos.map((produto) => (
             <ProductCard key={produto.slug} product={paraCard(produto)} />
           ))}

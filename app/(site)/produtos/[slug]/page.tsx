@@ -192,13 +192,18 @@ export default async function ProductPage({ params }: { params: { slug: string }
       </span>
       <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl">{product.title}</h1>
 
-      <div className="relative my-6 aspect-video overflow-hidden rounded-2xl border border-ink/8 bg-gradient-to-br from-paper to-ink/5 shadow-card">
+      {/* A moldura acompanha a foto em vez de ter proporção fixa. Antes era
+          16:9 com a imagem contida dentro: foto de produto é quase sempre
+          quadrada ou em pé, então sobrava uma faixa branca enorme dos dois
+          lados e a foto aparecia pequena. */}
+      <div className="my-6 flex justify-center overflow-hidden rounded-2xl border border-ink/8 bg-gradient-to-br from-paper to-ink/5 p-3 shadow-card sm:p-5">
         <Image
           src={urlDaFoto(product)}
           alt={product.title}
-          fill
-          className="object-contain p-8"
-          sizes="(max-width: 768px) 100vw, 768px"
+          width={900}
+          height={900}
+          className="h-auto max-h-[70vh] w-auto max-w-full rounded-xl object-contain"
+          sizes="(max-width: 768px) 100vw, 700px"
           priority
         />
       </div>
