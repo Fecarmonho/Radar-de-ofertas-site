@@ -64,13 +64,29 @@ export default function ProductCard({ product }: { product: ProdutoDoCard }) {
           >
             {NETWORKS[product.network].label}
           </span>
-          {product.rating && (
+          {/* O número de avaliações é o que dá confiança na oferta, então
+              aparece também no celular. Como o card tem ~160px de largura ali,
+              as 5 estrelas dão lugar a uma estrela + a nota, que ocupa bem
+              menos e diz a mesma coisa. */}
+          {(product.rating || product.reviewCount) && (
             <span className="flex items-center gap-1 text-[10px] text-ink/50 sm:text-xs">
-              <Stars rating={product.rating} />
+              {product.rating && (
+                <>
+                  <span className="flex items-center gap-0.5 sm:hidden">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="#FF6B00">
+                      <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
+                    </svg>
+                    <span className="font-semibold text-ink/70">
+                      {product.rating.toFixed(1)}
+                    </span>
+                  </span>
+                  <span className="hidden sm:flex">
+                    <Stars rating={product.rating} />
+                  </span>
+                </>
+              )}
               {product.reviewCount && (
-                <span className="hidden sm:inline">
-                  ({product.reviewCount.toLocaleString("pt-BR")})
-                </span>
+                <span>({product.reviewCount.toLocaleString("pt-BR")})</span>
               )}
             </span>
           )}
