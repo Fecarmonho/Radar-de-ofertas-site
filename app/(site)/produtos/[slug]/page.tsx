@@ -159,7 +159,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       {/* eslint-disable-next-line react/no-danger */}
       <script
         type="application/ld+json"
@@ -187,64 +187,108 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <span className="text-ink/60">{product.title}</span>
       </nav>
 
-      <span className="mt-4 block text-xs font-bold uppercase tracking-widest text-signal">
-        {NETWORKS[product.network].label}
-      </span>
-      <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl">{product.title}</h1>
+      {/* No computador a foto fica de um lado e as informações do outro, para
+          preço e botão aparecerem sem precisar rolar. No celular tudo empilha
+          na ordem de sempre: foto, nome, preço. */}
+      <div className="mt-5 grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
+        {/* A moldura acompanha a foto em vez de ter proporção fixa: foto de
+            produto é quase sempre quadrada ou em pé, e a moldura 16:9 antiga
+            deixava uma faixa branca enorme dos dois lados. */}
+        <div className="flex justify-center overflow-hidden rounded-2xl border border-ink/8 bg-gradient-to-br from-paper to-ink/5 p-3 shadow-card sm:p-5 lg:sticky lg:top-6">
+          <Image
+            src={urlDaFoto(product)}
+            alt={product.title}
+            width={900}
+            height={900}
+            className="h-auto max-h-[52vh] w-auto max-w-full rounded-xl object-contain lg:max-h-[520px]"
+            sizes="(max-width: 1024px) 100vw, 560px"
+            priority
+          />
+        </div>
 
-      {/* A moldura acompanha a foto em vez de ter proporção fixa. Antes era
-          16:9 com a imagem contida dentro: foto de produto é quase sempre
-          quadrada ou em pé, então sobrava uma faixa branca enorme dos dois
-          lados e a foto aparecia pequena. */}
-      <div className="my-6 flex justify-center overflow-hidden rounded-2xl border border-ink/8 bg-gradient-to-br from-paper to-ink/5 p-3 shadow-card sm:p-5">
-        <Image
-          src={urlDaFoto(product)}
-          alt={product.title}
-          width={900}
-          height={900}
-          className="h-auto max-h-[70vh] w-auto max-w-full rounded-xl object-contain"
-          sizes="(max-width: 768px) 100vw, 700px"
-          priority
-        />
-      </div>
+        <div>
+          <span className="block text-xs font-bold uppercase tracking-widest text-signal">
+            {NETWORKS[product.network].label}
+          </span>
+          <h1 className="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">
+            {product.title}
+          </h1>
 
-      <p className="text-ink/80">{product.shortDescription}</p>
+          <p className="mt-4 text-ink/80">{product.shortDescription}</p>
 
-      {/* Ficha rápida: só mostra o que existe de verdade no cadastro. */}
-      <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          product.rating
-            ? {
-                termo: "Nota na loja",
-                valor: `${product.rating.toFixed(1)} / 5`,
-              }
-            : null,
-          product.reviewCount
-            ? {
-                termo: "Avaliações",
-                valor: product.reviewCount.toLocaleString("pt-BR"),
-              }
-            : null,
-          product.brand ? { termo: "Marca", valor: product.brand } : null,
-          { termo: "Categoria", valor: product.category },
-        ]
-          .filter((item): item is { termo: string; valor: string } => item !== null)
-          .map((item) => (
-            <div
-              key={item.termo}
-              className="rounded-xl border border-ink/8 bg-white p-3 shadow-card"
-            >
-              <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink/40">
-                {item.termo}
-              </dt>
-              <dd className="mt-1 font-display text-sm font-bold text-ink">{item.valor}</dd>
+          <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-ink/8 bg-white p-6 shadow-card sm:flex-row sm:items-center">
+            <div className="leading-tight">
+              <span className="block text-[11px] font-medium uppercase tracking-wide text-ink/40">
+                A partir de
+              </span>
+              <span
+                className={`block whitespace-nowrap font-display font-extrabold text-ink ${
+                  product.price.length > 12 ? "text-xl sm:text-2xl" : "text-3xl"
+                }`}
+              >
+                {product.price}
+              </span>
+              {product.priceUpdatedAt && (
+                <span className="mt-1 block text-[11px] text-ink/40">
+                  Preço conferido em{" "}
+                  {new Date(product.priceUpdatedAt).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}{" "}
+                  · confirme o valor final na Shopee
+                </span>
+              )}
             </div>
-          ))}
-      </dl>
+            <a
+              href={buildTrackedGoUrl(product.slug, "site")}
+              target="_blank"
+              rel="nofollow sponsored noopener"
+              className="btn-fire shrink-0 rounded-full px-6 py-3.5 font-display font-bold text-white"
+            >
+              Ver oferta na {NETWORKS[product.network].label}
+            </a>
+          </div>
+
+          {/* Ficha rápida: só mostra o que existe de verdade no cadastro. */}
+          <dl className="mt-6 grid grid-cols-2 gap-3">
+            {[
+              product.rating
+                ? {
+                    termo: "Nota na loja",
+                    valor: `${product.rating.toFixed(1)} / 5`,
+                  }
+                : null,
+              product.reviewCount
+                ? {
+                    termo: "Avaliações",
+                    valor: product.reviewCount.toLocaleString("pt-BR"),
+                  }
+                : null,
+              product.brand ? { termo: "Marca", valor: product.brand } : null,
+              { termo: "Categoria", valor: product.category },
+            ]
+              .filter((item): item is { termo: string; valor: string } => item !== null)
+              .map((item) => (
+                <div
+                  key={item.termo}
+                  className="rounded-xl border border-ink/8 bg-white p-3 shadow-card"
+                >
+                  <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink/40">
+                    {item.termo}
+                  </dt>
+                  <dd className="mt-1 font-display text-sm font-bold text-ink">
+                    {item.valor}
+                  </dd>
+                </div>
+              ))}
+          </dl>
+        </div>
+      </div>
 
       {/* Análise escrita no painel — é o conteúdo original da página. */}
       {paragrafos.length > 0 && (
-        <section className="mt-10">
+        <section className="mt-12 max-w-3xl">
           <h2 className="font-display text-xl font-bold text-ink">
             Por que este entrou no radar
           </h2>
@@ -256,46 +300,12 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </section>
       )}
 
-      <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border border-ink/8 bg-white p-6 shadow-card sm:flex-row sm:items-center">
-        <div className="leading-tight">
-          <span className="block text-[11px] font-medium uppercase tracking-wide text-ink/40">
-            A partir de
-          </span>
-          <span
-            className={`block whitespace-nowrap font-display font-extrabold text-ink ${
-              product.price.length > 12 ? "text-xl sm:text-2xl" : "text-3xl"
-            }`}
-          >
-            {product.price}
-          </span>
-          {product.priceUpdatedAt && (
-            <span className="mt-1 block text-[11px] text-ink/40">
-              Preço conferido em{" "}
-              {new Date(product.priceUpdatedAt).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}{" "}
-              · confirme o valor final na Shopee
-            </span>
-          )}
-        </div>
-        <a
-          href={buildTrackedGoUrl(product.slug, "site")}
-          target="_blank"
-          rel="nofollow sponsored noopener"
-          className="btn-fire rounded-full px-6 py-3.5 font-display font-bold text-white"
-        >
-          Ver oferta na {NETWORKS[product.network].label}
-        </a>
-      </div>
-
       {relacionados.length > 0 && (
         <section className="mt-14">
           <h2 className="font-display text-xl font-bold text-ink">
             Outras ofertas parecidas
           </h2>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             {relacionados.map((p) => (
               <ProductCard key={p.slug} product={paraCard(p)} />
             ))}
