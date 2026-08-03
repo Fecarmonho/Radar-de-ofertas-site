@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Product, NETWORKS, buildTrackedGoUrl } from "@/lib/affiliates";
+import { ProdutoDoCard, NETWORKS, buildTrackedGoUrl } from "@/lib/affiliates";
 
-const NETWORK_BADGE: Record<Product["network"], string> = {
+const NETWORK_BADGE: Record<ProdutoDoCard["network"], string> = {
   shopee: "bg-[#EE4D2D]/10 text-[#EE4D2D]",
 };
 
@@ -35,7 +35,7 @@ function tamanhoDoPreco(price: string): string {
   return "text-lg sm:text-2xl";
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product }: { product: ProdutoDoCard }) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-ink/8 bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
       {/* Filete superior aceso no hover */}
@@ -44,10 +44,9 @@ export default function ProductCard({ product }: { product: Product }) {
       <Link href={`/produtos/${product.slug}`} className="block">
         <div className="relative aspect-square bg-gradient-to-br from-paper to-ink/5">
           <Image
-            src={product.image}
+            src={product.foto}
             alt={product.title}
             fill
-            unoptimized={product.image.startsWith("data:")}
             className="object-contain p-4 transition-transform duration-300 group-hover:scale-105 sm:p-6"
             sizes="(max-width: 640px) 50vw, 320px"
           />

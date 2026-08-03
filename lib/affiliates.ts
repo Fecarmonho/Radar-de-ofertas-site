@@ -39,6 +39,12 @@ export interface Product {
   brand?: string;
   rating?: number;
   reviewCount?: number;
+  /**
+   * Análise escrita à mão sobre o produto (parágrafos separados por linha
+   * em branco). É o conteúdo original da página — sem ele, a página é só
+   * um link, o que derruba o Quality Score no Google Ads.
+   */
+  review?: string;
 }
 
 /** Seção editorial da home (ex: "Fones de ouvido", "Casa"), criada pelo admin. */
@@ -144,6 +150,70 @@ export function isPriceRange(text: string): boolean {
   // Sem \b depois de "até": o acento não conta como caractere de palavra
   // em JavaScript, então a borda nunca casaria ali.
   return /\d[\d.,]*\s*(?:[-–—]|\bat[ée]|\ba\b)\s*R?\$?\s*\d/i.test(text.trim());
+}
+
+/**
+ * Endereço da foto para usar no <img>.
+ *
+ * Foto vinda da Shopee já é uma URL e vai direto. Foto enviada à mão fica
+ * guardada como base64 dentro do produto: em vez de despejar isso no HTML,
+ * aponta para /imagens/<slug>, que entrega a mesma foto como arquivo — o
+ * navegador carrega sob demanda e guarda em cache.
+ */
+export function urlDaFoto(product: Pick<Product, "slug" | "image">): string {
+  if (!product.image) return "/placeholder-produto.svg";
+  return product.image.startsWith("data:") ? `/imagens/${product.slug}` : product.image;
+}
+
+/**
+ * Versão enxuta do produto para os cards.
+ *
+ * A listagem é interativa (tem busca), então tudo que for passado para ela
+ * viaja junto com a página até o navegador. Mandar o produto inteiro levaria
+ * a foto em base64 embutida no HTML — o que este recorte evita: aqui só vai
+ * o endereço da foto.
+ */
+export interface ProdutoDoCard {
+  slug: string;
+  title: string;
+  shortDescription: string;
+  price: string;
+  category: string;
+  network: Network;
+  brand?: string;
+  rating?: number;
+  reviewCount?: number;
+  foto: string;
+}
+
+export function paraCard(product: Product): ProdutoDoCard {
+  return {
+    slug: product.slug,
+    title: product.title,
+    shortDescription: product.shortDescription,
+    price: product.price,
+    category: product.category,
+    network: product.network,
+    brand: product.brand,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    foto: urlDaFoto(product),
+  };
+}
+
+/**
+ * Extrai os valores numéricos de um preço escrito, na ordem em que aparecem.
+ * "R$ 16,99 - R$ 48,99" devolve [16.99, 48.99]; "R$ 129,90" devolve [129.9].
+ *
+ * Serve para o schema.org: mandar a string crua faz o Google recusar a ficha
+ * de produto inteira por preço inválido.
+ */
+export function extrairValoresBRL(text: string): number[] {
+  if (!text) return [];
+  const encontrados = text.match(/\d[\d.,]*/g) ?? [];
+  return encontrados
+    .map((trecho) => parsePriceBRL(trecho))
+    .filter((valor): valor is number => valor !== undefined);
 }
 
 /** URL interna que o botão de compra deve usar — nunca o link de afiliado direto. */

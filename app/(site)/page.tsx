@@ -2,10 +2,10 @@ import Link from "next/link";
 import { getAllProducts } from "@/lib/products-db";
 import { getAllSections } from "@/lib/sections-db";
 import { getBanners } from "@/lib/banners-db";
-import { Product } from "@/lib/affiliates";
-import ProductCard from "@/components/ProductCard";
+import { paraCard, Product } from "@/lib/affiliates";
 import BannerCarousel from "@/components/BannerCarousel";
 import MarqueeTicker from "@/components/MarqueeTicker";
+import OfertasBuscaveis, { Fileira } from "@/components/OfertasBuscaveis";
 
 // Revalida a home a cada 60s, assim produtos criados/editados no painel
 // de admin aparecem no site sem precisar de um novo deploy.
@@ -65,11 +65,19 @@ export default async function HomePage() {
     }
   }
 
-  const rows = [
+  // paraCard corta o produto no que o card precisa — sem isso a foto em
+  // base64 viajaria dentro do HTML da home, que é justamente o que pesava.
+  const rows: Fileira[] = [
     ...sections
       .filter((s) => (bySection.get(s.slug) ?? []).length > 0)
-      .map((s) => ({ title: s.name, products: bySection.get(s.slug)! })),
-    ...(semSecao.length > 0 ? [{ title: "Outras ofertas", products: semSecao }] : []),
+      .map((s) => ({
+        title: s.name,
+        slug: s.slug,
+        products: bySection.get(s.slug)!.map(paraCard),
+      })),
+    ...(semSecao.length > 0
+      ? [{ title: "Outras ofertas", products: semSecao.map(paraCard) }]
+      : []),
   ];
 
   return (
@@ -79,35 +87,8 @@ export default async function HomePage() {
 
       <MarqueeTicker />
 
-      {/* ── OFERTAS (uma fileira por seção) ──────────────────────── */}
-      <div id="ofertas" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16">
-        {rows.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-ink/15 bg-white p-10 text-center text-sm text-ink/50">
-            Nenhuma oferta cadastrada ainda.
-          </p>
-        ) : (
-          rows.map((row, i) => (
-            <section key={row.title} className={i > 0 ? "mt-16" : ""}>
-              <div className="mb-8 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-signal">
-                    {i === 0 ? "Detectadas agora" : "No radar"}
-                  </p>
-                  <h2 className="mt-2 font-display text-2xl font-bold text-ink sm:text-3xl">
-                    {row.title}
-                  </h2>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
-                {row.products.map((product) => (
-                  <ProductCard key={product.slug} product={product} />
-                ))}
-              </div>
-            </section>
-          ))
-        )}
-      </div>
+      {/* ── OFERTAS (uma fileira por seção, com busca) ───────────── */}
+      <OfertasBuscaveis fileiras={rows} />
 
       {/* ── COMO FUNCIONA ─────────────────────────────────────── */}
       <section

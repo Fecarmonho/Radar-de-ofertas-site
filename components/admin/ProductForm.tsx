@@ -290,6 +290,26 @@ export default function ProductForm({
 
       <div>
         <label className="block text-sm font-medium text-ink/80">
+          Análise (aparece na página do produto)
+          <textarea
+            value={form.review ?? ""}
+            onChange={(e) => update("review", e.target.value)}
+            rows={7}
+            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
+            placeholder={
+              "Escreva alguns parágrafos com sua opinião: pra quem serve, o que vem na caixa, o que agrada e o que decepciona, com o que dá pra comparar.\n\nDeixe uma linha em branco entre os parágrafos."
+            }
+          />
+        </label>
+        <p className="mt-1.5 text-xs text-ink/50">
+          Texto escrito por você é o que separa a página de um link solto. É o
+          que o Google usa pra ranquear e o que o Google Ads olha pra liberar
+          anúncio — página sem conteúdo próprio costuma ser reprovada.
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-ink/80">
           Seção na home
           {sections.length === 0 ? (
             <p className="mt-1 rounded-lg border border-dashed border-ink/15 bg-paper px-3 py-2 text-xs text-ink/50">

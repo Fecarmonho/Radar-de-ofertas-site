@@ -53,7 +53,12 @@ function FloatBadge({
   );
 }
 
-function BoxIllustration() {
+/**
+ * Sacola de compras da Shopee. É desenho (SVG), não foto: fica nítida em
+ * qualquer tamanho de tela, não pesa no carregamento e não some se um
+ * arquivo for renomeado.
+ */
+function SacolaIllustration() {
   return (
     <svg viewBox="0 0 320 320" className="h-full w-full" aria-hidden="true">
       <GlossyDefs />
@@ -61,15 +66,55 @@ function BoxIllustration() {
         <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.25" />
         <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
       </radialGradient>
+      <linearGradient id="sacolaCorpo" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#FF7A2E" />
+        <stop offset="55%" stopColor="#EE4D2D" />
+        <stop offset="100%" stopColor="#D93B1C" />
+      </linearGradient>
       <circle cx="160" cy="160" r="150" fill="url(#bg2)" />
+
       <g filter="url(#softGlow)">
-        <polygon points="160,90 240,130 240,220 160,260 80,220 80,130" fill="#E8500F" />
-        <polygon points="160,90 240,130 160,170 80,130" fill="#FF8A1E" />
-        <polygon points="160,170 240,130 240,220 160,260" fill="#B8330A" />
+        {/* alças */}
+        <path
+          d="M120 96V80a40 40 0 0 1 80 0v16"
+          fill="none"
+          stroke="#FFF1E4"
+          strokeWidth="11"
+          strokeLinecap="round"
+        />
+        {/* corpo da sacola */}
+        <path d="M74 96h172l14 150a16 16 0 0 1-16 18H76a16 16 0 0 1-16-18z" fill="url(#sacolaCorpo)" />
+        {/* dobra da base */}
+        <path d="M67 214h186l-5 32a16 16 0 0 1-16 18H88a16 16 0 0 1-16-18z" fill="#000" opacity="0.09" />
+        {/* brilho */}
+        <path d="M74 96h172l14 150a16 16 0 0 1-16 18H76a16 16 0 0 1-16-18z" fill="url(#sheen)" opacity="0.45" />
       </g>
-      <line x1="160" y1="170" x2="160" y2="260" stroke="#7A2205" strokeWidth="3" />
-      <path d="M130 105 165 88 200 105" fill="none" stroke="#FFE9D6" strokeWidth="6" strokeLinecap="round" />
-      <polygon points="160,90 200,110 160,130 120,110" fill="url(#sheen)" opacity="0.7" />
+
+      {/* marca: sacolinha branca + inicial */}
+      <g transform="translate(160 168)">
+        <path
+          d="M-30 -22h60l6 60a10 10 0 0 1-10 11h-52a10 10 0 0 1-10-11z"
+          fill="#FFF5EB"
+        />
+        <path
+          d="M-14 -22v-9a14 14 0 0 1 28 0v9"
+          fill="none"
+          stroke="#FFF5EB"
+          strokeWidth="7"
+          strokeLinecap="round"
+        />
+        <text
+          x="0"
+          y="34"
+          textAnchor="middle"
+          fontSize="52"
+          fontWeight="700"
+          fontFamily="Verdana, sans-serif"
+          fill="#EE4D2D"
+        >
+          S
+        </text>
+      </g>
     </svg>
   );
 }
@@ -129,7 +174,7 @@ const SLIDES = [
     description:
       "Todo link leva direto pra loja oficial da Shopee — você compra, garante e recebe.",
     ctas: [{ label: "Como funciona", href: "/#como-funciona", style: "fire" as const }],
-    Illustration: BoxIllustration,
+    Illustration: SacolaIllustration,
   },
   {
     variant: "hero" as const,
@@ -403,8 +448,10 @@ export default function BannerCarousel({
                 />
               </div>
             ) : (
-              /* Ícone principal + selinhos flutuantes + selo com a logo */
-              <div className="relative h-32 w-32 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
+              /* Ícone principal + selinhos flutuantes + selo com a logo.
+                 No celular a ilustração ficava pequena demais perto do texto:
+                 sobe de 128px para 176px, sem mudar tablet e computador. */
+              <div className="relative h-44 w-44 shrink-0 sm:h-56 sm:w-56 lg:h-64 lg:w-64">
                 <s.Illustration />
 
                 <FloatBadge className="left-0 top-1 sm:-left-3 sm:top-4" delay="0s" size={46}>
