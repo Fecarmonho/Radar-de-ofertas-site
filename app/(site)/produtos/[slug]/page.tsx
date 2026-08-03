@@ -261,10 +261,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
                     valor: `${product.rating.toFixed(1)} / 5`,
                   }
                 : null,
-              product.reviewCount
+              product.salesCount
                 ? {
-                    termo: "Avaliações",
-                    valor: product.reviewCount.toLocaleString("pt-BR"),
+                    termo: "Vendas",
+                    valor: product.salesCount.toLocaleString("pt-BR"),
                   }
                 : null,
               product.brand ? { termo: "Marca", valor: product.brand } : null,

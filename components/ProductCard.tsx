@@ -64,11 +64,12 @@ export default function ProductCard({ product }: { product: ProdutoDoCard }) {
           >
             {NETWORKS[product.network].label}
           </span>
-          {/* O número de avaliações é o que dá confiança na oferta, então
-              aparece também no celular. Como o card tem ~160px de largura ali,
-              as 5 estrelas dão lugar a uma estrela + a nota, que ocupa bem
-              menos e diz a mesma coisa. */}
-          {(product.rating || product.reviewCount) && (
+          {/* Nota em estrelas + número de vendas, no mesmo formato do painel
+              de afiliados da Shopee. O número de vendas é o que dá confiança
+              na oferta, então aparece também no celular — e lá as 5 estrelas
+              dão lugar a uma estrela + a nota, que ocupa bem menos espaço no
+              card de ~160px e diz a mesma coisa. */}
+          {(product.rating || product.salesCount) && (
             <span className="flex items-center gap-1 text-[10px] text-ink/50 sm:text-xs">
               {product.rating && (
                 <>
@@ -85,9 +86,11 @@ export default function ProductCard({ product }: { product: ProdutoDoCard }) {
                   </span>
                 </>
               )}
-              {product.reviewCount && (
-                <span>({product.reviewCount.toLocaleString("pt-BR")})</span>
-              )}
+              {product.salesCount ? (
+                <span className="whitespace-nowrap">
+                  {product.salesCount.toLocaleString("pt-BR")} vendas
+                </span>
+              ) : null}
             </span>
           )}
         </div>

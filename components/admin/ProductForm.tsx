@@ -43,6 +43,7 @@ export default function ProductForm({
       brand: "",
       rating: undefined,
       reviewCount: undefined,
+      salesCount: undefined,
     }
   );
   const [error, setError] = useState<string | null>(null);
@@ -453,18 +454,25 @@ export default function ProductForm({
           />
         </label>
         <label className="block text-sm font-medium text-ink/80">
-          Qtd. avaliações
+          Qtd. vendas
           <input
             type="number"
             min={0}
-            value={form.reviewCount ?? ""}
+            value={form.salesCount ?? ""}
             onChange={(e) =>
-              update("reviewCount", e.target.value ? Number(e.target.value) : undefined)
+              update("salesCount", e.target.value ? Number(e.target.value) : undefined)
             }
             className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
+            placeholder="Ex: 443"
           />
         </label>
       </div>
+      <p className="-mt-1 text-xs text-ink/50">
+        As vendas aparecem no card ao lado das estrelas, como no painel de
+        afiliados da Shopee. O número de avaliações continua sendo capturado
+        sozinho pelo &quot;Buscar dados&quot; — ele não aparece no site, serve
+        só para a ficha de produto do Google, que exige a contagem junto da nota.
+      </p>
 
       {error && <p className="text-sm font-medium text-ember">{error}</p>}
 

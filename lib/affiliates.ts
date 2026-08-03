@@ -38,7 +38,14 @@ export interface Product {
   /** Tags para SEO / schema.org */
   brand?: string;
   rating?: number;
+  /**
+   * Nº de avaliações na loja. Não aparece no site — serve para a ficha de
+   * produto do Google, que exige a contagem junto da nota. É preenchido
+   * sozinho pelo "Buscar dados".
+   */
   reviewCount?: number;
+  /** Nº de vendas mostrado no card, ao lado das estrelas. Digitado à mão. */
+  salesCount?: number;
   /**
    * Análise escrita à mão sobre o produto (parágrafos separados por linha
    * em branco). É o conteúdo original da página — sem ele, a página é só
@@ -182,7 +189,7 @@ export interface ProdutoDoCard {
   network: Network;
   brand?: string;
   rating?: number;
-  reviewCount?: number;
+  salesCount?: number;
   foto: string;
 }
 
@@ -196,7 +203,7 @@ export function paraCard(product: Product): ProdutoDoCard {
     network: product.network,
     brand: product.brand,
     rating: product.rating,
-    reviewCount: product.reviewCount,
+    salesCount: product.salesCount,
     foto: urlDaFoto(product),
   };
 }
