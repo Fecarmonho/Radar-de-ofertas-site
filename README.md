@@ -16,6 +16,7 @@ lib/products-db.ts           -> produtos (coleção "products")
 lib/sections-db.ts           -> seções da home (coleção "sections")
 lib/admins-db.ts             -> quem pode entrar no painel (coleção "admins")
 lib/stats-db.ts              -> contadores de visita e clique (coleção "stats")
+lib/site-status-db.ts        -> site no ar / em construção / fora do ar (doc "settings/site")
 lib/scrape-shopee.ts         -> lê dados do produto a partir do link
 lib/price-refresh.ts         -> rotina que confere os preços
 lib/affiliates.ts            -> tipos e regras do link de afiliado
@@ -76,6 +77,36 @@ clicados e origem do tráfego. A contagem é feita no próprio servidor e
 guardada como um documento por dia na coleção `stats` — por isso é barata
 e não é bloqueada por bloqueador de anúncio, diferente do GA4 (que
 continua funcionando em paralelo, se você configurar).
+
+## Tirar o site do ar
+
+`/admin/site` tem um interruptor com três posições, que vale na hora para
+o site inteiro:
+
+- **No ar** — normal.
+- **Em construção** — o site continua navegável, com uma tarja laranja no
+  topo de todas as páginas.
+- **Fora do ar** — nenhuma página do site aparece: só o aviso de
+  manutenção. O `robots.txt` passa a pedir que o Google não indexe
+  enquanto durar, para ele não trocar o conteúdo já indexado pelo texto
+  de manutenção.
+
+O painel **não** sai do ar junto — é outro grupo de rotas e não passa
+pelo layout do site. Dá para cadastrar produto com o site fora do ar e
+só então colocá-lo no ar.
+
+O texto dos dois avisos é editável na mesma tela, e cada um é guardado
+separado: dá para deixar a mensagem de manutenção escrita hoje e só usar
+no dia que precisar. Enquanto o site não estiver "no ar", o painel mostra
+uma faixa em todas as páginas — o jeito de ninguém esquecer ligado.
+
+As páginas do site ficam 60s em cache; por isso a rota que grava o estado
+chama `revalidatePath("/", "layout")`, senão o botão levaria até um
+minuto para fazer efeito.
+
+Detalhe: os links `/api/go/:slug` já compartilhados continuam levando
+para a Shopee mesmo com o site fora do ar. É de propósito — não expõe
+nada do site e a comissão continua valendo.
 
 ## Deploy na Vercel
 
