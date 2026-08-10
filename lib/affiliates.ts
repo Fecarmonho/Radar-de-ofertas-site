@@ -16,6 +16,9 @@
 
 export type Network = "shopee";
 
+/** Categorias disponíveis para classificar um produto no admin. */
+export const PRODUCT_CATEGORIES = ["eletronicos", "casa", "beleza", "moda", "outros"] as const;
+
 export interface Product {
   slug: string;
   title: string;

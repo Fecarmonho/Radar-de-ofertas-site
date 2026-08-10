@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-session";
-import { scrapeShopeeProduct, Diagnostico } from "@/lib/scrape-shopee";
+import { scrapeShopeeProduct, explicarDiagnostico } from "@/lib/scrape-shopee";
 
 export const dynamic = "force-dynamic";
 /**
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (!data.title && !data.image) {
       console.warn("[scrape] sem dados", JSON.stringify(data.diagnostico));
       return NextResponse.json(
-        { error: explicar(data.diagnostico), diagnostico: data.diagnostico },
+        { error: explicarDiagnostico(data.diagnostico), diagnostico: data.diagnostico },
         { status: 422 }
       );
     }
@@ -41,32 +41,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Transforma o que aconteceu na conversa com a Shopee numa frase que diz
- * o que fazer. Sem isso qualquer falha virava o mesmo "não consegui ler
- * o link", e não dava para saber se o problema era o link, a Shopee ou
- * o tempo.
- */
-function explicar(d?: Diagnostico): string {
-  if (!d) return "Não consegui ler os dados desse link. Preencha na mão.";
-
-  if (d.demorou) {
-    return "A Shopee demorou demais para responder. Tente de novo em alguns segundos ou preencha na mão.";
-  }
-
-  if (d.status === 403 || d.status === 429) {
-    return `A Shopee recusou o acesso do servidor (código ${d.status}). Ela às vezes bloqueia pedidos que não vêm de um navegador. Preencha na mão desta vez.`;
-  }
-
-  if (d.naoResolveu) {
-    return "Esse link curto não abriu até a página do produto. Cole o link completo (o endereço que tem -i.123.456 no final) ou preencha na mão.";
-  }
-
-  if (d.status === 0) {
-    return "Não consegui nem chegar na Shopee a partir do servidor. Tente de novo ou preencha na mão.";
-  }
-
-  return `A Shopee respondeu (código ${d.status}), mas sem os dados do produto — acontece com item de campanha. Preencha na mão.`;
 }

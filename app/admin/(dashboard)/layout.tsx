@@ -58,6 +58,9 @@ export default async function AdminDashboardLayout({
               <Link href="/admin" className="shrink-0 transition-colors hover:text-ink">
                 Produtos
               </Link>
+              <Link href="/admin/anuncios" className="shrink-0 transition-colors hover:text-ink">
+                Anúncios
+              </Link>
               <Link href="/admin/metricas" className="shrink-0 transition-colors hover:text-ink">
                 Métricas
               </Link>

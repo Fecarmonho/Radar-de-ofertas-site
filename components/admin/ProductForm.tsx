@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Product, Section, isPriceRange } from "@/lib/affiliates";
+import { Product, Section, isPriceRange, PRODUCT_CATEGORIES } from "@/lib/affiliates";
 import { compressImageToBase64 } from "@/lib/image-compress";
 
-const CATEGORIES = ["eletronicos", "casa", "beleza", "moda", "outros"];
+const CATEGORIES = PRODUCT_CATEGORIES;
 
 function slugify(text: string) {
   return text
