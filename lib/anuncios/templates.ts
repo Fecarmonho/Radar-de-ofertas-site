@@ -89,13 +89,53 @@ const HASHTAGS_DESTINO: Record<AnuncioDestino, string[]> = {
 
 const HASHTAGS_GENERICAS = ["#achadinho", "#promocao", "#oferta", "#vempravaler"];
 
+/**
+ * Palavras comuns demais para virar hashtag ("Kit 2 Unidades Sérum Facial"
+ * não deve virar #kit #2 #unidades). Curta de propósito — é melhor deixar
+ * passar uma palavra fraca do que cortar uma palavra-chave de verdade.
+ */
+const PALAVRAS_IGNORADAS = new Set([
+  "de", "da", "do", "das", "dos", "e", "ou", "com", "sem", "para", "por",
+  "em", "no", "na", "nos", "nas", "um", "uma", "uns", "umas", "o", "a",
+  "os", "as", "kit", "und", "unidade", "unidades", "pacote", "novo", "nova",
+]);
+
+const MARCAS_DIACRITICAS = new RegExp("[̀-ͯ]", "g");
+
+/**
+ * Tira as palavras mais relevantes do nome do produto pra virar hashtag —
+ * é isso que faz a legenda achar quem já está buscando aquele produto
+ * específico, e não só a categoria genérica.
+ */
+function extrairPalavrasChave(titulo: string | undefined, max = 3): string[] {
+  if (!titulo) return [];
+
+  const palavras = titulo
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(MARCAS_DIACRITICAS, "")
+    .split(/[^a-z0-9]+/)
+    .filter((palavra) => palavra.length > 2 && !/^\d+$/.test(palavra) && !PALAVRAS_IGNORADAS.has(palavra));
+
+  const vistas = new Set<string>();
+  const hashtags: string[] = [];
+  for (const palavra of palavras) {
+    if (vistas.has(palavra)) continue;
+    vistas.add(palavra);
+    hashtags.push(`#${palavra}`);
+    if (hashtags.length >= max) break;
+  }
+  return hashtags;
+}
+
 export function gerarHashtags(produto: ProdutoAnuncio, destino: AnuncioDestino): string[] {
   const todas = [
+    ...extrairPalavrasChave(produto.title),
     ...(HASHTAGS_CATEGORIA[produto.category ?? "outros"] ?? HASHTAGS_CATEGORIA.outros),
     ...HASHTAGS_DESTINO[destino],
     ...HASHTAGS_GENERICAS,
   ];
-  return Array.from(new Set(todas)).slice(0, 12);
+  return Array.from(new Set(todas)).slice(0, 15);
 }
 
 /**
