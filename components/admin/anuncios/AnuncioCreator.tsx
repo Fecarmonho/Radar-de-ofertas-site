@@ -31,6 +31,7 @@ interface Rascunho {
   estilo: AnuncioEstilo;
   gancho: string;
   textoSecundario: string;
+  hashtags: string[];
   /** Descrição livre do modelo/pessoa a incluir na imagem/vídeo (opcional). */
   modelo: string;
   promptImagem: string;
@@ -49,6 +50,7 @@ const RASCUNHO_INICIAL: Rascunho = {
   estilo: "clean",
   gancho: "",
   textoSecundario: "",
+  hashtags: [],
   modelo: "",
   promptImagem: "",
   promptVideo: "",
@@ -108,6 +110,10 @@ export default function AnuncioCreator() {
   const [copiado, setCopiado] = useState(false);
   const [copiadoImagem, setCopiadoImagem] = useState(false);
   const [copiadoVideo, setCopiadoVideo] = useState(false);
+  const [gerandoTexto, setGerandoTexto] = useState(false);
+  const [avisoTexto, setAvisoTexto] = useState<string | null>(null);
+  const [gerandoPrompts, setGerandoPrompts] = useState(false);
+  const [avisoPrompts, setAvisoPrompts] = useState<string | null>(null);
 
   // Recupera o rascunho salvo (se houver) só depois de montar no cliente —
   // localStorage não existe no lado do servidor.
@@ -207,15 +213,74 @@ export default function AnuncioCreator() {
     }
   }
 
-  function sugerirTextos() {
-    const sugestao = gerarSugestaoTexto(estado.produto, estado.estilo, estado.destino);
-    setEstado((prev) => ({ ...prev, gancho: sugestao.gancho, textoSecundario: sugestao.textoSecundario }));
+  /**
+   * Pede pra IA (Gemini, camada grátis) escrever gancho/texto/hashtags. Se
+   * a IA não responder (sem chave configurada, limite do dia, sem rede), a
+   * própria rota já devolve a sugestão por template — por isso o catch aqui
+   * só cobre a rota em si estar fora do ar, e cai pro mesmo template local.
+   */
+  async function sugerirTextos() {
+    setGerandoTexto(true);
+    setAvisoTexto(null);
+    try {
+      const response = await fetch("/api/admin/anuncios/sugerir-texto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ produto: estado.produto, estilo: estado.estilo, destino: estado.destino }),
+      });
+      const data = await response.json();
+      setEstado((prev) => ({
+        ...prev,
+        gancho: data.gancho,
+        textoSecundario: data.textoSecundario,
+        hashtags: data.hashtags,
+      }));
+      setAvisoTexto(
+        data.fonte === "ia" ? "Gerado por IA." : "IA indisponível agora — usei sugestão por regra."
+      );
+    } catch {
+      const sugestao = gerarSugestaoTexto(estado.produto, estado.estilo, estado.destino);
+      setEstado((prev) => ({
+        ...prev,
+        gancho: sugestao.gancho,
+        textoSecundario: sugestao.textoSecundario,
+        hashtags: sugestao.hashtags,
+      }));
+      setAvisoTexto("Não consegui falar com o servidor — usei sugestão por regra.");
+    } finally {
+      setGerandoTexto(false);
+    }
   }
 
-  function sugerirPrompts() {
-    const promptImagem = gerarPromptImagem(estado.produto, estado.estilo, estado.modelo);
-    const promptVideo = gerarPromptVideo(estado.produto, estado.estilo, estado.destino, estado.modelo);
-    setEstado((prev) => ({ ...prev, promptImagem, promptVideo }));
+  async function sugerirPrompts() {
+    setGerandoPrompts(true);
+    setAvisoPrompts(null);
+    try {
+      const response = await fetch("/api/admin/anuncios/sugerir-prompts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          produto: estado.produto,
+          estilo: estado.estilo,
+          destino: estado.destino,
+          modelo: estado.modelo,
+        }),
+      });
+      const data = await response.json();
+      setEstado((prev) => ({ ...prev, promptImagem: data.promptImagem, promptVideo: data.promptVideo }));
+      setAvisoPrompts(
+        data.fonte === "ia" ? "Gerado por IA." : "IA indisponível agora — usei sugestão por regra."
+      );
+    } catch {
+      setEstado((prev) => ({
+        ...prev,
+        promptImagem: gerarPromptImagem(estado.produto, estado.estilo, estado.modelo),
+        promptVideo: gerarPromptVideo(estado.produto, estado.estilo, estado.destino, estado.modelo),
+      }));
+      setAvisoPrompts("Não consegui falar com o servidor — usei sugestão por regra.");
+    } finally {
+      setGerandoPrompts(false);
+    }
   }
 
   async function copiarCampo(texto: string, marcar: (v: boolean) => void) {
@@ -234,7 +299,10 @@ export default function AnuncioCreator() {
     setAvisoBusca(null);
   }
 
-  const hashtags = gerarHashtags(estado.produto, estado.destino);
+  // Antes do primeiro "Sugerir textos" ainda não existe hashtag vinda da
+  // IA/rota — mostra a versão por template só como prévia, pra não deixar
+  // a caixa vazia.
+  const hashtags = estado.hashtags.length > 0 ? estado.hashtags : gerarHashtags(estado.produto, estado.destino);
   const legenda = montarLegenda(estado.produto, estado.destino, estado.gancho, estado.textoSecundario);
   const textoParaCopiar = `${legenda}\n\n${hashtags.join(" ")}`;
 
@@ -388,11 +456,15 @@ export default function AnuncioCreator() {
           <button
             type="button"
             onClick={sugerirTextos}
-            className="whitespace-nowrap rounded-full border border-signal/40 bg-signal/10 px-4 py-2 text-sm font-bold text-signal transition-colors hover:bg-signal/20"
+            disabled={gerandoTexto}
+            className="whitespace-nowrap rounded-full border border-signal/40 bg-signal/10 px-4 py-2 text-sm font-bold text-signal transition-colors hover:bg-signal/20 disabled:opacity-50"
           >
-            Sugerir textos
+            {gerandoTexto ? "Gerando..." : "Sugerir textos"}
           </button>
         </div>
+        {avisoTexto && (
+          <p className="rounded-lg bg-paper px-3 py-2 text-xs font-medium text-ink/70">{avisoTexto}</p>
+        )}
         <label className="block text-sm font-medium text-ink/80">
           Gancho
           <input
@@ -419,15 +491,19 @@ export default function AnuncioCreator() {
           <button
             type="button"
             onClick={sugerirPrompts}
-            className="whitespace-nowrap rounded-full border border-signal/40 bg-signal/10 px-4 py-2 text-sm font-bold text-signal transition-colors hover:bg-signal/20"
+            disabled={gerandoPrompts}
+            className="whitespace-nowrap rounded-full border border-signal/40 bg-signal/10 px-4 py-2 text-sm font-bold text-signal transition-colors hover:bg-signal/20 disabled:opacity-50"
           >
-            Sugerir prompts
+            {gerandoPrompts ? "Gerando..." : "Sugerir prompts"}
           </button>
         </div>
         <p className="text-xs text-ink/50">
           Texto pronto pra colar no GPT (melhorar a foto / trocar o modelo) e no
           Veo/Gemini (gerar o vídeo). Não gera nada sozinho — é só o prompt, editável.
         </p>
+        {avisoPrompts && (
+          <p className="rounded-lg bg-paper px-3 py-2 text-xs font-medium text-ink/70">{avisoPrompts}</p>
+        )}
         <label className="block text-sm font-medium text-ink/80">
           Descrição do modelo (opcional)
           <input
