@@ -236,7 +236,9 @@ export default function AnuncioCreator() {
         hashtags: data.hashtags,
       }));
       setAvisoTexto(
-        data.fonte === "ia" ? "Gerado por IA." : "IA indisponível agora — usei sugestão por regra."
+        data.fonte === "ia"
+          ? "Gerado por IA."
+          : `IA indisponível agora — usei sugestão por regra. (${data.motivo ?? "motivo desconhecido"})`
       );
     } catch {
       const sugestao = gerarSugestaoTexto(estado.produto, estado.estilo, estado.destino);
@@ -269,7 +271,9 @@ export default function AnuncioCreator() {
       const data = await response.json();
       setEstado((prev) => ({ ...prev, promptImagem: data.promptImagem, promptVideo: data.promptVideo }));
       setAvisoPrompts(
-        data.fonte === "ia" ? "Gerado por IA." : "IA indisponível agora — usei sugestão por regra."
+        data.fonte === "ia"
+          ? "Gerado por IA."
+          : `IA indisponível agora — usei sugestão por regra. (${data.motivo ?? "motivo desconhecido"})`
       );
     } catch {
       setEstado((prev) => ({

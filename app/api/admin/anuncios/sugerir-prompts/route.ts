@@ -69,11 +69,15 @@ export async function POST(request: NextRequest) {
       promptVideo: String(json.promptVideo),
     });
   } catch (err) {
-    if (!(err instanceof IAIndisponivelError)) {
+    const motivo = err instanceof Error ? err.message : String(err);
+    if (err instanceof IAIndisponivelError) {
+      console.warn("[anuncios] IA de prompts indisponível:", motivo);
+    } else {
       console.error("[anuncios] erro inesperado ao chamar IA de prompts", err);
     }
     return NextResponse.json({
       fonte: "template",
+      motivo,
       promptImagem: gerarPromptImagem(produto, estilo, modeloTexto),
       promptVideo: gerarPromptVideo(produto, estilo, destino, modeloTexto),
     });
