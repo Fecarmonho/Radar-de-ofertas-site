@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { PRODUCT_CATEGORIES } from "@/lib/affiliates";
 import { compressImageToBase64 } from "@/lib/image-compress";
-import { gerarHashtags, gerarSugestaoTexto, montarLegenda } from "@/lib/anuncios/templates";
+import {
+  gerarHashtags,
+  gerarPromptImagem,
+  gerarPromptVideo,
+  gerarSugestaoTexto,
+  montarLegenda,
+} from "@/lib/anuncios/templates";
 import {
   AnuncioDestino,
   AnuncioEstilo,
@@ -25,6 +31,10 @@ interface Rascunho {
   estilo: AnuncioEstilo;
   gancho: string;
   textoSecundario: string;
+  /** Descrição livre do modelo/pessoa a incluir na imagem/vídeo (opcional). */
+  modelo: string;
+  promptImagem: string;
+  promptVideo: string;
 }
 
 function produtoVazio(origem: AnuncioOrigem, link: string): ProdutoAnuncio {
@@ -39,6 +49,9 @@ const RASCUNHO_INICIAL: Rascunho = {
   estilo: "clean",
   gancho: "",
   textoSecundario: "",
+  modelo: "",
+  promptImagem: "",
+  promptVideo: "",
 };
 
 const MARCAS_DIACRITICAS = new RegExp("[̀-ͯ]", "g");
@@ -93,6 +106,8 @@ export default function AnuncioCreator() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [copiadoImagem, setCopiadoImagem] = useState(false);
+  const [copiadoVideo, setCopiadoVideo] = useState(false);
 
   // Recupera o rascunho salvo (se houver) só depois de montar no cliente —
   // localStorage não existe no lado do servidor.
@@ -195,6 +210,22 @@ export default function AnuncioCreator() {
   function sugerirTextos() {
     const sugestao = gerarSugestaoTexto(estado.produto, estado.estilo, estado.destino);
     setEstado((prev) => ({ ...prev, gancho: sugestao.gancho, textoSecundario: sugestao.textoSecundario }));
+  }
+
+  function sugerirPrompts() {
+    const promptImagem = gerarPromptImagem(estado.produto, estado.estilo, estado.modelo);
+    const promptVideo = gerarPromptVideo(estado.produto, estado.estilo, estado.destino, estado.modelo);
+    setEstado((prev) => ({ ...prev, promptImagem, promptVideo }));
+  }
+
+  async function copiarCampo(texto: string, marcar: (v: boolean) => void) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      marcar(true);
+      setTimeout(() => marcar(false), 2000);
+    } catch {
+      setAvisoBusca("Não consegui copiar automaticamente — selecione o texto na mão.");
+    }
   }
 
   function limparRascunho() {
@@ -382,8 +413,72 @@ export default function AnuncioCreator() {
         </label>
       </section>
 
+      <section className="space-y-4 rounded-2xl border border-ink/8 bg-white p-6 shadow-card sm:p-8">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="font-display text-lg font-bold text-ink">4. Prompts para IA</h2>
+          <button
+            type="button"
+            onClick={sugerirPrompts}
+            className="whitespace-nowrap rounded-full border border-signal/40 bg-signal/10 px-4 py-2 text-sm font-bold text-signal transition-colors hover:bg-signal/20"
+          >
+            Sugerir prompts
+          </button>
+        </div>
+        <p className="text-xs text-ink/50">
+          Texto pronto pra colar no GPT (melhorar a foto / trocar o modelo) e no
+          Veo/Gemini (gerar o vídeo). Não gera nada sozinho — é só o prompt, editável.
+        </p>
+        <label className="block text-sm font-medium text-ink/80">
+          Descrição do modelo (opcional)
+          <input
+            value={estado.modelo}
+            onChange={(e) => setEstado((prev) => ({ ...prev, modelo: e.target.value }))}
+            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
+            placeholder="Ex: mulher jovem, sorridente, pele negra"
+          />
+        </label>
+
+        <label className="block text-sm font-medium text-ink/80">
+          Prompt de imagem (GPT)
+          <textarea
+            value={estado.promptImagem}
+            onChange={(e) => setEstado((prev) => ({ ...prev, promptImagem: e.target.value }))}
+            rows={4}
+            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
+            placeholder="Clique em “Sugerir prompts” para gerar"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => copiarCampo(estado.promptImagem, setCopiadoImagem)}
+          disabled={!estado.promptImagem}
+          className="rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold text-ink/70 hover:border-ink/30 disabled:opacity-40"
+        >
+          {copiadoImagem ? "Copiado!" : "Copiar prompt de imagem"}
+        </button>
+
+        <label className="block text-sm font-medium text-ink/80">
+          Prompt de vídeo (Veo / Gemini)
+          <textarea
+            value={estado.promptVideo}
+            onChange={(e) => setEstado((prev) => ({ ...prev, promptVideo: e.target.value }))}
+            rows={4}
+            className="mt-1 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-accent focus:outline-none"
+            placeholder="Clique em “Sugerir prompts” para gerar"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => copiarCampo(estado.promptVideo, setCopiadoVideo)}
+          disabled={!estado.promptVideo}
+          className="rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold text-ink/70 hover:border-ink/30 disabled:opacity-40"
+        >
+          {copiadoVideo ? "Copiado!" : "Copiar prompt de vídeo"}
+        </button>
+      </section>
+
       <section className="rounded-2xl border border-ink/8 bg-white p-6 shadow-card sm:p-8">
-        <h2 className="mb-4 font-display text-lg font-bold text-ink">4. Capa 9:16</h2>
+        <h2 className="mb-4 font-display text-lg font-bold text-ink">5. Capa 9:16</h2>
         <CapaCanvas
           imagem={estado.produto.image}
           gancho={estado.gancho || estado.produto.title || "Seu gancho aqui"}

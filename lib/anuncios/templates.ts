@@ -171,3 +171,73 @@ export function gerarSugestaoTexto(
   const legenda = montarLegenda(produto, destino, gancho, textoSecundario);
   return { gancho, textoSecundario, legenda, hashtags };
 }
+
+/**
+ * Prompts para ferramentas de IA externas (GPT pra imagem, Veo/Gemini pra
+ * vídeo) — texto sugerido pra copiar e colar lá, editável antes de usar.
+ * Nada aqui chama nenhuma API de IA, é só montagem de texto por regra,
+ * igual ao gancho/legenda/hashtags acima.
+ */
+function tomPorEstilo(estilo: AnuncioEstilo): string {
+  switch (estilo) {
+    case "clean":
+      return "still de produto minimalista, sem modelo, fundo liso e sombra suave";
+    case "gancho-forte":
+      return "cena dinâmica, sensação de urgência/oferta, cores vibrantes";
+    case "beneficio":
+      return "mostrando o produto sendo usado no dia a dia, evidenciando o benefício principal";
+    case "ugc-review":
+      return "estilo caseiro e autêntico, como um vídeo gravado no celular, sem parecer profissional demais";
+  }
+}
+
+export function gerarPromptImagem(
+  produto: ProdutoAnuncio,
+  estilo: AnuncioEstilo,
+  modelo?: string
+): string {
+  const titulo = produto.title?.trim() || "o produto";
+  const linhas = [
+    `Melhore esta foto de "${titulo}", mantendo o produto real e reconhecível — não altere cor, formato, texto ou marca.`,
+    `Estilo: ${tomPorEstilo(estilo)}.`,
+  ];
+
+  if (modelo?.trim()) {
+    linhas.push(`Inclua um(a) modelo (${modelo.trim()}) usando ou segurando o produto, em pose natural.`);
+  } else if (estilo !== "clean") {
+    linhas.push("Inclua um(a) modelo usando ou segurando o produto, em pose natural.");
+  }
+
+  linhas.push("Iluminação de estúdio, fundo neutro, foco nítido no produto, proporção vertical 9:16.");
+  return linhas.join("\n");
+}
+
+export function gerarPromptVideo(
+  produto: ProdutoAnuncio,
+  estilo: AnuncioEstilo,
+  destino: AnuncioDestino,
+  modelo?: string
+): string {
+  const titulo = produto.title?.trim() || "o produto";
+  const linhas = [
+    `Vídeo vertical 9:16, de 8 a 15 segundos, anunciando "${titulo}".`,
+    `Estilo: ${tomPorEstilo(estilo)}.`,
+  ];
+
+  if (modelo?.trim()) {
+    linhas.push(`Modelo: ${modelo.trim()}, aparece usando ou mostrando o produto.`);
+  }
+
+  linhas.push(
+    destino === "pinterest"
+      ? "Ritmo calmo, cenas inspiracionais, com um enquadramento bom pra pausar num frame só."
+      : "Ritmo rápido, cortes dinâmicos, gancho visual já nos primeiros 2 segundos."
+  );
+
+  if (produto.price) {
+    linhas.push(`Mostrar o preço "${produto.price}" em algum ponto do vídeo, como texto na tela.`);
+  }
+
+  linhas.push("Sem áudio de marca registrada nem logotipos de terceiros.");
+  return linhas.join("\n");
+}
