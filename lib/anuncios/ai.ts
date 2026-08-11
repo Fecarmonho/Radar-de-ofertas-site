@@ -7,7 +7,13 @@ import "server-only";
  * conta gratuita.
  */
 
-const MODEL = "gemini-2.0-flash";
+/**
+ * "2.0" ficou obsoleto e passou a devolver 404 no v1beta pouco depois de
+ * lançado — a Google troca o modelo padrão da camada gratuita com
+ * frequência. Se isso voltar a quebrar, confira o nome atual em
+ * ai.google.dev/gemini-api/docs/pricing (procure "Free of charge").
+ */
+const MODEL = "gemini-3.6-flash";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 const TIMEOUT_MS = 15_000;
 
